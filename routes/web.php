@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\VisitController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,4 +42,6 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
     Route::match(['put', 'patch'], '/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
     Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
+
+    Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
 });

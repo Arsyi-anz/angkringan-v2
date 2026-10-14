@@ -1,0 +1,27 @@
+/* ang-visit-modal.css : tambahan untuk modal Catat kunjungan (combobox + field terkunci).
+   Komponen modal dasar ada di ang-modal.css. */
+.ang-combo{position:relative}
+.ang-combo .ang-input{padding-right:40px}
+.ang-combo-chev{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--ang-muted);pointer-events:none}
+.ang-combo-list{
+  position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:5;
+  max-height:220px;overflow-y:auto;margin:0;padding:6px;list-style:none;
+  background:#fff;border:1px solid var(--ang-line);border-radius:12px;
+  box-shadow:0 12px 28px rgba(46,24,16,.18);
+}
+.ang-combo-list[hidden]{display:none}
+.ang-combo-opt{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:9px 10px;border-radius:8px;cursor:pointer;
+}
+.ang-combo-opt[hidden]{display:none}
+.ang-combo-opt.is-active{background:var(--ang-terra-soft)}
+.ang-combo-name{font-weight:700}
+.ang-combo-wa{color:var(--ang-muted);font-size:12.5px}
+.ang-combo-empty{padding:12px 10px;color:var(--ang-muted);font-size:13px}
+
+.ang-lockwrap{position:relative}
+.ang-lockwrap .ang-input{padding-right:40px}
+.ang-input[readonly]{background:#F1E9E1;color:var(--ang-muted);cursor:not-allowed}
+.ang-input[readonly]:focus{box-shadow:none;border-color:var(--ang-line);background:#F1E9E1}
+.ang-lockwrap .ang-ico{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--ang-muted)}

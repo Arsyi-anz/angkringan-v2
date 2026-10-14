@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/ang-base.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/ang-sidebar.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/ang-modal.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/ang-visit-modal.css') }}">
     @stack('ang-styles')
 </head>
 <body class="ang-app">
@@ -24,7 +25,9 @@
     </div>
 </div>
 @include('partials.ang-customer-modal')
+@include('partials.ang-visit-modal')
 <script src="{{ asset('assets/js/ang-modal.js') }}"></script>
+<script src="{{ asset('assets/js/ang-visit-modal.js') }}"></script>
 @stack('ang-scripts')
 </body>
 </html>

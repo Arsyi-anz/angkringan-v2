@@ -106,7 +106,7 @@
                                 </td>
                                 <td>
                                     <div class="ang-actions">
-                                        <a href="{{ Route::has('admin.visits.create') ? route('admin.visits.create', ['customer' => $c->id]) : '#' }}" class="ang-btn ang-btn-sm">+ Kunjungan</a>
+                                        <button type="button" class="ang-btn ang-btn-sm" data-ang-modal="ang-visit-modal" data-customer-id="{{ $c->id_customer }}">+ Kunjungan</button>
                                         <a href="{{ Route::has('admin.customers.edit') ? route('admin.customers.edit', $c) : '#' }}" class="ang-btn ang-btn-sm">Edit</a>
                                     </div>
                                 </td>

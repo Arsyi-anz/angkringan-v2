@@ -22,8 +22,9 @@ class CustomerController extends Controller
     public function index(SearchCustomerRequest $request): View
     {
         $customers = $this->customers->all($request->filters());
+        $customerOptions = Customer::query()->orderBy('nama')->get();
 
-        return view('customers.ang-index', compact('customers'));
+        return view('customers.ang-index', compact('customers', 'customerOptions'));
     }
 
     public function store(StoreCustomerRequest $request): RedirectResponse
