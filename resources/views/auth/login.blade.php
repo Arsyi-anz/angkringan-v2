@@ -7,7 +7,7 @@
 <div class="auth-wrapper">
     <div class="auth-card">
         <div class="text-center mb-4">
-            <img src="{{ asset('images/logo.png') }}" class="brand-logo mx-auto mb-3" alt="Bakso Angkringan">
+            <img src="{{ asset('images/logo.png') }}" class="brand-logo mx-auto mb-3" alt="Hotber Angkringan">
             <h5 class="fw-bold mb-1">Admin Angkringan</h5>
             <p class="section-subtitle mb-0">Masuk menggunakan akun admin yang terdaftar</p>
         </div>
