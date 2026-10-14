@@ -34,10 +34,9 @@
                 <p class="ang-lead">Ringkasan customer, voucher, dan aktivitas loyalty Angkringan.</p>
             </div>
             <div class="ang-head-actions">
-                <a href="{{ Route::has('admin.customers.create') ? route('admin.customers.create') : '#' }}" class="ang-btn ang-btn-primary">
-                    <svg class="ang-ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                <button type="button" class="ang-btn ang-btn-primary" data-ang-modal="ang-customer-modal">
                     Tambah customer
-                </a>
+                </button>
                 <a href="{{ Route::has('admin.vouchers.index') ? route('admin.vouchers.index') : '#' }}" class="ang-btn">Kelola voucher</a>
             </div>
         </div>

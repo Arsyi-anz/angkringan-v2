@@ -23,6 +23,12 @@
   transition:background .15s,border-color .15s;
 }
 .ang-btn:hover{border-color:#D3BFAE;background:#FCF8F4}
+.ang-flash{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:20px;padding:11px 16px;border-radius:10px;
+  background:var(--ang-ok-bg);border:1px solid #BFD9BA;
+  color:var(--ang-ok);font-weight:600;font-size:13.5px;
+}
 .ang-btn-primary{background:var(--ang-terra);border-color:var(--ang-terra);color:#fff !important;padding:11px 18px;font-size:14px}
 .ang-btn-primary:hover{background:var(--ang-terra-dark);border-color:var(--ang-terra-dark)}
 .ang-btn-sm{padding:6px 11px;font-size:12.5px}

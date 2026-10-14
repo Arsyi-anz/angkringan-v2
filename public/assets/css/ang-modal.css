@@ -1,0 +1,51 @@
+/* ang-modal.css : modal (native <dialog>) untuk form Tambah customer */
+.ang-modal{
+  width:min(480px,calc(100% - 32px));max-height:calc(100vh - 32px);
+  padding:0;border:0;border-radius:16px;overflow:auto;
+  background:var(--ang-surface);color:var(--ang-text);
+  box-shadow:0 24px 60px rgba(46,24,16,.35);
+}
+.ang-modal::backdrop{background:rgba(46,24,16,.55);backdrop-filter:blur(2px)}
+.ang-modal[open]{animation:ang-pop .18s ease-out}
+@keyframes ang-pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.ang-modal[open]{animation:none}}
+
+.ang-modal-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  padding:22px 24px;background:var(--ang-brown);color:#fff;
+}
+.ang-modal-title{margin:0;font-size:20px;font-weight:800;letter-spacing:-.2px}
+.ang-modal-sub{margin:4px 0 0;color:#D9C2B2;font-size:13px}
+.ang-modal-close{
+  flex:none;width:36px;height:36px;border:0;border-radius:10px;cursor:pointer;
+  display:grid;place-items:center;background:rgba(255,255,255,.12);color:#fff;
+  transition:background .15s;
+}
+.ang-modal-close:hover{background:rgba(255,255,255,.22)}
+
+.ang-modal-body{padding:24px 24px 6px}
+.ang-field{margin-bottom:18px}
+.ang-label{display:block;margin-bottom:6px;font-weight:700;font-size:13.5px}
+.ang-req{color:var(--ang-terra)}
+.ang-input{
+  width:100%;padding:11px 14px;
+  border:1px solid var(--ang-line);border-radius:10px;
+  background:var(--ang-paper);
+}
+.ang-input::placeholder{color:#A8927F}
+.ang-input:focus{border-color:var(--ang-terra);background:#fff;outline:none;box-shadow:0 0 0 3px var(--ang-terra-soft)}
+.ang-input.is-invalid{border-color:#B3402A}
+.ang-error{display:block;margin-top:5px;color:#B3402A;font-size:12.5px}
+
+.ang-check{display:flex;align-items:flex-start;gap:10px;font-weight:600;cursor:pointer}
+.ang-check input{width:18px;height:18px;margin-top:2px;accent-color:var(--ang-terra);flex:none}
+.ang-hint{margin:6px 0 0 28px;color:var(--ang-muted);font-size:12.5px}
+
+.ang-modal-foot{
+  display:flex;justify-content:flex-end;gap:10px;
+  margin-top:8px;padding:16px 24px 22px;border-top:1px solid var(--ang-line);
+}
+@media (max-width:480px){
+  .ang-modal-head,.ang-modal-body,.ang-modal-foot{padding-left:18px;padding-right:18px}
+  .ang-modal-foot .ang-btn{flex:1;justify-content:center}
+}

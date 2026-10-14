@@ -12,6 +12,7 @@ use App\Services\CustomerService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
@@ -25,13 +26,13 @@ class CustomerController extends Controller
         return view('customers.ang-index', compact('customers'));
     }
 
-    public function store(StoreCustomerRequest $request): JsonResponse
+    public function store(StoreCustomerRequest $request): RedirectResponse
     {
-        $customer = Customer::create($request->validated());
-        $customer->refresh();
-        $customer->loadCount('kunjungan as visits_count');
+        Customer::create($request->validated());
 
-        return (new CustomerResource($customer))->response()->setStatusCode(201);
+        return redirect()
+            ->route('admin.customers.index')
+            ->with('status', 'Customer berhasil disimpan.');
     }
 
     public function show(Customer $customer): CustomerResource

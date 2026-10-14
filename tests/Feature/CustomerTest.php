@@ -25,13 +25,14 @@ class CustomerTest extends TestCase
     {
         $this->actingAs($this->makeAdmin(), 'admin');
 
-        $this->postJson('/admin/customers', [
+        $this->post('/admin/customers', [
             'nama' => 'Budi',
             'no_wa' => '0812-3456-7890',
             'setuju_pesan' => true,
-        ])->assertCreated()->assertJsonPath('data.no_wa', '6281234567890');
+        ])->assertRedirect(route('admin.customers.index'));
 
         $this->assertDatabaseHas('customer', ['no_wa' => '6281234567890']);
+        $this->assertEquals('Customer berhasil disimpan.', session('status'));
     }
 
     public function test_no_wa_must_be_unique(): void

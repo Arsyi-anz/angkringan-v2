@@ -14,12 +14,32 @@ class StoreCustomerRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('no_wa')) {
+        if ($this->has('whatsapp')) {
+            $this->merge(['no_wa' => PhoneNumber::normalize($this->input('whatsapp'))]);
+        } elseif ($this->has('no_wa')) {
             $this->merge(['no_wa' => PhoneNumber::normalize($this->input('no_wa'))]);
         }
 
-        if ($this->has('setuju_pesan')) {
+        if ($this->has('name')) {
+            $this->merge(['nama' => $this->input('name')]);
+        }
+
+        if ($this->has('wa_consent')) {
+            $this->merge(['setuju_pesan' => $this->boolean('wa_consent')]);
+        } elseif ($this->has('setuju_pesan')) {
             $this->merge(['setuju_pesan' => $this->boolean('setuju_pesan')]);
+        }
+
+        if ($this->has('birth_date') && $this->filled('birth_date')) {
+            try {
+                $d = \Carbon\Carbon::parse($this->input('birth_date'));
+                $this->merge([
+                    'lahir_tgl' => (int) $d->day,
+                    'lahir_bln' => (int) $d->month,
+                ]);
+            } catch (\Throwable $e) {
+                // ignore
+            }
         }
     }
 

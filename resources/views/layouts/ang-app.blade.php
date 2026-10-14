@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/ang-base.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/ang-sidebar.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/ang-modal.css') }}">
     @stack('ang-styles')
 </head>
 <body class="ang-app">
@@ -22,5 +23,8 @@
         @yield('content')
     </div>
 </div>
+@include('partials.ang-customer-modal')
+<script src="{{ asset('assets/js/ang-modal.js') }}"></script>
+@stack('ang-scripts')
 </body>
 </html>

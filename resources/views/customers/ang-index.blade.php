@@ -20,11 +20,14 @@
                 <h1 class="ang-title">Data Customer</h1>
                 <p class="ang-lead">Satu nomor WhatsApp untuk satu member. Tanggal lahir bersifat opsional dan persetujuan pesan wajib dicatat.</p>
             </div>
-            <a href="{{ Route::has('admin.customers.create') ? route('admin.customers.create') : '#' }}" class="ang-btn ang-btn-primary">
-                <svg class="ang-ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            <button type="button" class="ang-btn ang-btn-primary" data-ang-modal="ang-customer-modal">
                 Tambah customer
-            </a>
+            </button>
         </div>
+
+        @if (session('status'))
+            <div class="ang-flash" role="status">{{ session('status') }}</div>
+        @endif
 
         {{-- Catatan: kalau $customers memakai paginate(), hitung statistik di controller. --}}
         <section class="ang-stats" aria-label="Ringkasan">
