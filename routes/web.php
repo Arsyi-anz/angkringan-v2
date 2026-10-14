@@ -43,5 +43,6 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::match(['put', 'patch'], '/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
     Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
+    Route::get('/visits', [VisitController::class, 'index'])->name('visits.index');
     Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
 });

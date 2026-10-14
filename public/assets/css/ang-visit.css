@@ -1,0 +1,12 @@
+/* ang-visit.css : halaman Kunjungan Dine-in (catatan + sel statistik periode) */
+.ang-notice{
+  margin:0 0 20px;padding:11px 16px;border-radius:10px;
+  background:var(--ang-terra-soft);border:1px solid var(--ang-line);
+  color:var(--ang-text);font-size:13px;
+}
+.ang-notice strong{color:var(--ang-brown)}
+
+.ang-date{color:var(--ang-text);font-weight:600;white-space:nowrap}
+
+.ang-period{font-weight:800;color:var(--ang-brown);font-size:15px}
+.ang-period-sub{display:block;color:var(--ang-muted);font-size:12px;font-weight:500}

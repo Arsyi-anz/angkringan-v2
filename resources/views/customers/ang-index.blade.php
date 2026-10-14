@@ -131,4 +131,6 @@
             </div>
         </section>
     </main>
+
+    @include('partials.ang-visit-modal')
 @endsection

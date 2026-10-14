@@ -25,7 +25,6 @@
     </div>
 </div>
 @include('partials.ang-customer-modal')
-@include('partials.ang-visit-modal')
 <script src="{{ asset('assets/js/ang-modal.js') }}"></script>
 <script src="{{ asset('assets/js/ang-customer-modal.js') }}"></script>
 <script src="{{ asset('assets/js/ang-visit-modal.js') }}"></script>

@@ -21,89 +21,157 @@ class VisitTest extends TestCase
         ]);
     }
 
-    public function test_visit_can_be_recorded(): void
+    private function makeCustomer(string $nama = 'Budi', string $noWa = '6281234567890'): Customer
+    {
+        return Customer::create(['nama' => $nama, 'no_wa' => $noWa]);
+    }
+
+    public function test_guest_is_redirected_from_visits_page(): void
+    {
+        $this->get('/admin/visits')->assertRedirect(route('login'));
+    }
+
+    public function test_visits_page_is_rendered_with_customer_stats(): void
     {
         $admin = $this->makeAdmin();
-        $this->actingAs($admin, 'admin');
-        $customer = Customer::create(['nama' => 'Budi', 'no_wa' => '6281234567890']);
+        $customer = $this->makeCustomer();
 
-        $this->post('/admin/visits', [
-            'customer_id' => $customer->id_customer,
-            'visited_at' => '2026-01-05',
-            'visit_type' => 'dine_in',
-        ])->assertRedirect(route('admin.customers.index'));
+        Kunjungan::create([
+            'id_customer' => $customer->id_customer,
+            'tgl_kunjungan' => now()->toDateString(),
+            'id_admin' => $admin->id_admin,
+        ]);
+
+        $this->actingAs($admin, 'admin');
+
+        $this->get('/admin/visits')
+            ->assertOk()
+            ->assertSee('Kunjungan Dine-in')
+            ->assertSee('Budi')
+            ->assertSee('Dalam 90 hari')
+            ->assertSee('data-ang-modal="ang-visit-modal"', false)
+            ->assertSee('id="ang-visit-modal"', false)
+            ->assertViewHas('customers', function ($customers) {
+                $row = $customers->firstWhere('nama', 'Budi');
+
+                return $row !== null
+                    && (int) $row->visits_count === 1
+                    && (int) $row->visits_90d_count === 1
+                    && $row->last_visit_at !== null;
+            });
+    }
+
+    public function test_visits_page_only_includes_modal_once(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        $html = $this->get('/admin/visits')->assertOk()->getContent();
+
+        $this->assertSame(1, substr_count($html, 'id="ang-visit-modal"'));
+    }
+
+    public function test_visit_can_be_recorded_and_redirects_back(): void
+    {
+        $admin = $this->makeAdmin();
+        $customer = $this->makeCustomer();
+        $today = now()->toDateString();
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.visits.index'))
+            ->post(route('admin.visits.store'), [
+                '_ang_form' => 'visit',
+                'customer_id' => $customer->id_customer,
+                'visited_at' => $today,
+                'visit_type' => 'dine_in',
+            ])
+            ->assertRedirect(route('admin.visits.index'));
 
         $this->assertDatabaseHas('kunjungan', [
             'id_customer' => $customer->id_customer,
-            'tgl_kunjungan' => '2026-01-05',
+            'tgl_kunjungan' => $today,
             'id_admin' => $admin->id_admin,
         ]);
 
         $this->assertEquals('Kunjungan dine-in berhasil dicatat.', session('status'));
     }
 
-    public function test_duplicate_visit_same_day_is_rejected(): void
+    public function test_visit_can_be_recorded_from_customer_page_and_returns_there(): void
     {
         $admin = $this->makeAdmin();
-        $this->actingAs($admin, 'admin');
-        $customer = Customer::create(['nama' => 'Budi', 'no_wa' => '6281234567890']);
+        $customer = $this->makeCustomer();
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.customers.index'))
+            ->post(route('admin.visits.store'), [
+                'customer_id' => $customer->id_customer,
+                'visited_at' => now()->toDateString(),
+                'visit_type' => 'dine_in',
+            ])
+            ->assertRedirect(route('admin.customers.index'));
+    }
+
+    public function test_same_customer_cannot_be_recorded_twice_on_the_same_day(): void
+    {
+        $admin = $this->makeAdmin();
+        $customer = $this->makeCustomer();
+        $today = now()->toDateString();
+
         Kunjungan::create([
             'id_customer' => $customer->id_customer,
-            'tgl_kunjungan' => '2026-01-05',
+            'tgl_kunjungan' => $today,
             'id_admin' => $admin->id_admin,
         ]);
 
-        $this->postJson('/admin/visits', [
-            'customer_id' => $customer->id_customer,
-            'visited_at' => '2026-01-05',
-            'visit_type' => 'dine_in',
-        ])->assertStatus(422)->assertJsonValidationErrors('customer_id');
+        $this->actingAs($admin, 'admin')
+            ->postJson(route('admin.visits.store'), [
+                'customer_id' => $customer->id_customer,
+                'visited_at' => $today,
+                'visit_type' => 'dine_in',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('customer_id');
     }
 
     public function test_future_visit_date_is_rejected(): void
     {
-        $this->actingAs($this->makeAdmin(), 'admin');
-        $customer = Customer::create(['nama' => 'C', 'no_wa' => '628222222222']);
+        $admin = $this->makeAdmin();
+        $customer = $this->makeCustomer();
 
-        $this->postJson('/admin/visits', [
-            'customer_id' => $customer->id_customer,
-            'visited_at' => now()->addDay()->toDateString(),
-            'visit_type' => 'dine_in',
-        ])->assertStatus(422)->assertJsonValidationErrors('visited_at');
+        $this->actingAs($admin, 'admin')
+            ->postJson(route('admin.visits.store'), [
+                'customer_id' => $customer->id_customer,
+                'visited_at' => now()->addDay()->toDateString(),
+                'visit_type' => 'dine_in',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('visited_at');
     }
 
-    public function test_non_dine_in_visit_is_rejected(): void
+    public function test_take_away_visit_type_is_rejected(): void
     {
-        $this->actingAs($this->makeAdmin(), 'admin');
-        $customer = Customer::create(['nama' => 'D', 'no_wa' => '628333333333']);
+        $admin = $this->makeAdmin();
+        $customer = $this->makeCustomer();
 
-        $this->postJson('/admin/visits', [
-            'customer_id' => $customer->id_customer,
-            'visited_at' => now()->toDateString(),
-            'visit_type' => 'take_away',
-        ])->assertStatus(422)->assertJsonValidationErrors('visit_type');
+        $this->actingAs($admin, 'admin')
+            ->postJson(route('admin.visits.store'), [
+                'customer_id' => $customer->id_customer,
+                'visited_at' => now()->toDateString(),
+                'visit_type' => 'take_away',
+            ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('visit_type');
     }
 
-    public function test_customers_page_renders_visit_modal_and_button(): void
+    public function test_unknown_customer_is_rejected(): void
     {
         $this->actingAs($this->makeAdmin(), 'admin');
-        $customer = Customer::create(['nama' => 'Budi', 'no_wa' => '6281234567890']);
 
-        $this->get('/admin/customers')
-            ->assertOk()
-            ->assertSee('id="ang-visit-modal"', false)
-            ->assertSee('data-ang-modal="ang-visit-modal"', false)
-            ->assertSee('data-customer-id="'.$customer->id_customer.'"', false)
-            ->assertSee('data-id="'.$customer->id_customer.'"', false)
-            ->assertSee('/admin/visits', false);
-    }
-
-    public function test_visit_requires_login(): void
-    {
-        $this->post('/admin/visits', [
-            'customer_id' => 1,
+        $this->postJson(route('admin.visits.store'), [
+            'customer_id' => 99999,
             'visited_at' => now()->toDateString(),
             'visit_type' => 'dine_in',
-        ])->assertRedirect(route('login'));
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('customer_id');
     }
 }
