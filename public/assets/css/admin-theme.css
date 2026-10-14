@@ -1,0 +1,408 @@
+/* ==========================================================================
+   Admin Theme - Angkringan Loyalty Program
+   Warna dasar: #4A2A1A (dark brown) & #9a4e25 (terracotta)
+   ========================================================================== */
+
+:root {
+    --brand-dark: #4A2A1A;
+    --brand-dark-hover: #3a2114;
+    --brand-accent: #9a4e25;
+    --brand-accent-hover: #83421f;
+    --brand-accent-soft: #f3e3d8;
+
+    --neutral-25: #fbfaf9;
+    --neutral-50: #f7f4f1;
+    --neutral-100: #efe9e3;
+    --neutral-200: #e2d9d0;
+    --neutral-300: #cdbfb2;
+    --neutral-500: #8a7c70;
+    --neutral-600: #6b5f57;
+    --neutral-700: #4d443d;
+    --neutral-900: #2b2420;
+
+    --success: #2e7d4f;
+    --success-soft: #e3f3ea;
+    --warning: #b8792d;
+    --warning-soft: #fbf0df;
+    --danger: #b3392c;
+    --danger-soft: #fbe6e3;
+    --info: #2f6f8f;
+    --info-soft: #e2eef3;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow-card: 0 2px 10px rgba(43, 36, 32, 0.06);
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--neutral-50);
+    color: var(--neutral-900);
+}
+
+/* ---------- Layout shell ---------- */
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--brand-dark);
+    color: #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+    z-index: 1030;
+    transition: transform .2s ease;
+}
+
+.app-sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: 1.25rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.app-sidebar .brand .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--brand-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.app-sidebar .brand-name {
+    font-weight: 700;
+    font-size: 1.05rem;
+    line-height: 1.1;
+}
+
+.app-sidebar .brand-sub {
+    font-size: .72rem;
+    color: rgba(255, 255, 255, .55);
+}
+
+.sidebar-section-label {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: rgba(255, 255, 255, .4);
+    padding: 1.1rem 1.25rem .35rem;
+}
+
+.app-sidebar .nav-link {
+    color: rgba(255, 255, 255, .75);
+    padding: .55rem 1.25rem;
+    font-size: .89rem;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    border-left: 3px solid transparent;
+}
+
+.app-sidebar .nav-link i {
+    font-size: 1.05rem;
+    width: 20px;
+    text-align: center;
+}
+
+.app-sidebar .nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, .06);
+}
+
+.app-sidebar .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, .09);
+    border-left-color: var(--brand-accent);
+    font-weight: 600;
+}
+
+.app-sidebar .nav-link.submenu {
+    padding-left: 2.6rem;
+    font-size: .85rem;
+}
+
+.app-sidebar .brand img.brand-logo {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.auth-card img.brand-logo {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    border-radius: 12px;
+    display: block;
+}
+
+.app-main {
+    flex-grow: 1;
+    margin-left: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.app-topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--neutral-100);
+    padding: .75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+}
+
+.app-topbar .search-box {
+    max-width: 320px;
+    position: relative;
+}
+
+.app-topbar .search-box input {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--neutral-200);
+    padding-left: 2.25rem;
+    background: var(--neutral-50);
+}
+
+.app-topbar .search-box i {
+    position: absolute;
+    left: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--neutral-500);
+}
+
+.app-content {
+    padding: 1.5rem;
+    flex-grow: 1;
+}
+
+.app-footer {
+    padding: 1rem 1.5rem;
+    font-size: .8rem;
+    color: var(--neutral-500);
+    border-top: 1px solid var(--neutral-100);
+}
+
+.sidebar-toggle {
+    display: none;
+}
+
+@media (max-width: 991.98px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+    }
+
+    .app-sidebar.show {
+        transform: translateX(0);
+    }
+
+    .app-main {
+        margin-left: 0;
+    }
+
+    .sidebar-toggle {
+        display: inline-flex;
+    }
+}
+
+/* ---------- Cards ---------- */
+.card {
+    border: 1px solid var(--neutral-100);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+}
+
+.card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--neutral-100);
+    font-weight: 600;
+}
+
+.stat-card {
+    padding: 1.25rem;
+}
+
+.stat-card .stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: #fff;
+    background: var(--brand-accent);
+}
+
+.stat-card .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--neutral-900);
+}
+
+.stat-card .stat-label {
+    font-size: .82rem;
+    color: var(--neutral-600);
+}
+
+/* ---------- Buttons ---------- */
+.btn-brand {
+    background: var(--brand-accent);
+    border-color: var(--brand-accent);
+    color: #fff;
+}
+
+.btn-brand:hover {
+    background: var(--brand-accent-hover);
+    border-color: var(--brand-accent-hover);
+    color: #fff;
+}
+
+.btn-outline-brand {
+    border-color: var(--brand-accent);
+    color: var(--brand-accent);
+}
+
+.btn-outline-brand:hover {
+    background: var(--brand-accent);
+    color: #fff;
+}
+
+.btn-dark-brand {
+    background: var(--brand-dark);
+    border-color: var(--brand-dark);
+    color: #fff;
+}
+
+.btn-dark-brand:hover {
+    background: var(--brand-dark-hover);
+    border-color: var(--brand-dark-hover);
+    color: #fff;
+}
+
+/* ---------- Tables ---------- */
+.table thead th {
+    background: var(--neutral-50);
+    color: var(--neutral-600);
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 600;
+    border-bottom: 1px solid var(--neutral-100);
+}
+
+.table td {
+    vertical-align: middle;
+    font-size: .89rem;
+}
+
+.table-hover tbody tr:hover {
+    background: var(--neutral-50);
+}
+
+/* ---------- Badges ---------- */
+.badge-soft-success {
+    background: var(--success-soft);
+    color: var(--success);
+    font-weight: 600;
+}
+
+.badge-soft-warning {
+    background: var(--warning-soft);
+    color: var(--warning);
+    font-weight: 600;
+}
+
+.badge-soft-danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.badge-soft-info {
+    background: var(--info-soft);
+    color: var(--info);
+    font-weight: 600;
+}
+
+.badge-soft-brand {
+    background: var(--brand-accent-soft);
+    color: var(--brand-accent);
+    font-weight: 600;
+}
+
+/* ---------- Auth page ---------- */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-dark);
+    background-image: radial-gradient(circle at 20% 20%, rgba(154, 78, 37, .35), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(154, 78, 37, .25), transparent 45%);
+    padding: 1.5rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+}
+
+.auth-card .brand-mark {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--brand-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+/* ---------- Misc ---------- */
+.section-title {
+    font-weight: 700;
+    color: var(--neutral-900);
+}
+
+.section-subtitle {
+    color: var(--neutral-600);
+    font-size: .88rem;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--brand-accent);
+    border-color: var(--neutral-200) var(--neutral-200) #fff;
+    font-weight: 600;
+}
+
+.nav-tabs .nav-link {
+    color: var(--neutral-600);
+}
+
+.progress-bar.bg-brand {
+    background-color: var(--brand-accent) !important;
+}

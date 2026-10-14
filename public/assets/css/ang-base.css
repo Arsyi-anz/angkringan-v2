@@ -1,0 +1,46 @@
+/* ang-base.css : token warna, reset ter-scope, layout shell.
+   Semua selector diawali .ang- supaya tidak bentrok dengan CSS lain. */
+.ang-app{
+  --ang-brown-950:#2E1810;
+  --ang-brown:#4A2A1A;
+  --ang-brown-700:#5E3724;
+  --ang-terra:#9A4E25;
+  --ang-terra-dark:#7E3F1D;
+  --ang-terra-soft:#F4E3D7;
+  --ang-paper:#F8F3EE;
+  --ang-surface:#FFFFFF;
+  --ang-line:#E8DCD1;
+  --ang-text:#2B1A12;
+  --ang-muted:#7C6859;
+  --ang-ok:#2F6B3A;
+  --ang-ok-bg:#E3EFDF;
+  --ang-off:#8A5A1E;
+  --ang-off-bg:#F6E8CF;
+  --ang-sidebar-w:264px;
+  --ang-radius:12px;
+  margin:0;
+  background:var(--ang-paper);
+  color:var(--ang-text);
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.ang-app *,.ang-app *::before,.ang-app *::after{box-sizing:border-box}
+.ang-app a{color:inherit;text-decoration:none}
+.ang-app button,.ang-app input{font:inherit;color:inherit}
+.ang-app :focus-visible{outline:2px solid var(--ang-terra);outline-offset:2px}
+
+.ang-ico{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+.ang-shell{display:grid;grid-template-columns:var(--ang-sidebar-w) minmax(0,1fr);min-height:100vh}
+.ang-main{min-width:0;display:flex;flex-direction:column}
+.ang-nav-toggle{position:absolute;opacity:0;pointer-events:none}
+.ang-scrim{display:none}
+
+@media (max-width:900px){
+  .ang-shell{grid-template-columns:minmax(0,1fr)}
+  .ang-scrim{display:block;position:fixed;inset:0;background:rgba(46,24,16,.5);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+  .ang-nav-toggle:checked ~ .ang-scrim{opacity:1;pointer-events:auto}
+}
+@media (prefers-reduced-motion:reduce){.ang-app *{transition:none!important}}

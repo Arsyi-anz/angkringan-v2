@@ -1,0 +1,51 @@
+/* ang-dashboard.css : tambahan khusus Dashboard.
+   Komponen umum (topbar, stats, panel, table, badge, btn) ada di ang-customer.css. */
+.ang-head-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.ang-dash-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;margin-bottom:20px}
+.ang-panel-head{padding:18px 20px 14px}
+.ang-panel-title{margin:0;font-size:16px;font-weight:800;color:var(--ang-brown)}
+.ang-panel-sub{margin:2px 0 0;color:var(--ang-muted);font-size:13px}
+.ang-panel-body{padding:0 20px 20px}
+.ang-panel-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+
+/* Performa sumber voucher */
+.ang-sources{display:grid;gap:14px;margin:0 0 18px;padding:0;list-style:none}
+.ang-source{display:grid;grid-template-columns:42px 84px minmax(0,1fr) 52px;align-items:center;gap:12px}
+.ang-chip{
+  display:inline-grid;place-items:center;height:24px;border-radius:6px;
+  background:var(--ang-terra-soft);color:var(--ang-terra-dark);
+  font-size:11.5px;font-weight:800;
+}
+.ang-source-name{font-weight:600}
+.ang-track{height:10px;border-radius:999px;background:#F0E6DC;overflow:hidden}
+.ang-fill{display:block;height:100%;border-radius:999px;background:var(--ang-terra)}
+.ang-source-count{text-align:right;font-weight:800;color:var(--ang-brown)}
+
+.ang-note{
+  padding:14px 16px;border-radius:10px;
+  background:var(--ang-terra-soft);border-left:4px solid var(--ang-terra);
+}
+.ang-note strong{display:block;margin-bottom:2px;color:var(--ang-terra-dark)}
+.ang-note p{margin:0;color:#5A3B2C;font-size:13px}
+
+/* Aktivitas program */
+.ang-pill{padding:3px 10px;border-radius:999px;background:var(--ang-ok-bg);color:var(--ang-ok);font-size:12px;font-weight:700}
+.ang-activity{list-style:none;margin:0;padding:0 20px 8px}
+.ang-activity li{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 0;border-top:1px solid #F0E6DC}
+.ang-activity li:first-child{border-top:0}
+.ang-activity-name{display:block;font-weight:700}
+.ang-activity-sub{display:block;color:var(--ang-muted);font-size:12.5px}
+.ang-activity-num{font-size:20px;font-weight:800;color:var(--ang-brown)}
+.ang-activity-num.is-alert{color:var(--ang-terra)}
+
+.ang-panel + .ang-panel{margin-top:0}
+
+@media (max-width:900px){
+  .ang-dash-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){
+  .ang-source{grid-template-columns:38px minmax(0,1fr) 44px}
+  .ang-source-name{display:none}
+  .ang-track{grid-column:2}
+}

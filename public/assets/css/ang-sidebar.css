@@ -1,0 +1,57 @@
+/* ang-sidebar.css : khusus sidebar */
+.ang-sidebar{
+  position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;
+  background:var(--ang-brown);
+  color:#EADBCF;
+  padding:20px 14px;
+  z-index:50;
+}
+.ang-brand{display:flex;align-items:center;gap:12px;padding:4px 8px 22px}
+.ang-brand-mark{
+  width:40px;height:40px;border-radius:11px;
+  display:grid;place-items:center;
+  background:var(--ang-terra);color:#fff;
+  font-weight:800;font-size:18px;
+}
+.ang-brand-name{display:block;color:#fff;font-weight:800;font-size:16px;letter-spacing:.2px;line-height:1.2}
+.ang-brand-sub{display:block;color:#C9AE9B;font-size:12px}
+
+.ang-nav{flex:1;overflow-y:auto;padding-top:4px}
+.ang-nav-group{margin:0 0 6px;padding:14px 10px 6px;color:#B99983;font-size:12px;font-weight:600}
+.ang-nav-list{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.ang-nav-link{
+  position:relative;display:flex;align-items:center;gap:12px;
+  padding:10px 12px;border-radius:10px;
+  color:#E3D0C2;font-weight:500;
+  transition:background .15s,color .15s;
+}
+.ang-nav-link:hover{background:rgba(255,255,255,.07);color:#fff}
+.ang-nav-link.is-active{background:var(--ang-terra);color:#fff;font-weight:700}
+.ang-nav-link.is-active::before{
+  content:"";position:absolute;left:-14px;top:9px;bottom:9px;width:4px;
+  border-radius:0 4px 4px 0;background:#F0B58E;
+}
+
+.ang-sidebar-user{
+  display:flex;align-items:center;gap:12px;
+  margin-top:12px;padding:14px 8px 4px;
+  border-top:1px solid rgba(255,255,255,.12);
+}
+.ang-avatar-sm{
+  width:36px;height:36px;border-radius:50%;
+  display:grid;place-items:center;
+  background:var(--ang-brown-700);color:#F5DCCB;
+  font-weight:700;font-size:12px;
+}
+.ang-user-name{display:block;color:#fff;font-weight:700;line-height:1.2}
+.ang-user-role{display:block;color:#C9AE9B;font-size:12px}
+
+@media (max-width:900px){
+  .ang-sidebar{
+    position:fixed;left:0;top:0;width:var(--ang-sidebar-w);
+    transform:translateX(-100%);transition:transform .22s ease;
+  }
+  .ang-nav-toggle:checked ~ .ang-sidebar{transform:none}
+  .ang-nav-link.is-active::before{left:-14px}
+}
