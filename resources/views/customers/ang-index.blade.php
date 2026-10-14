@@ -107,7 +107,12 @@
                                 <td>
                                     <div class="ang-actions">
                                         <button type="button" class="ang-btn ang-btn-sm" data-ang-modal="ang-visit-modal" data-customer-id="{{ $c->id_customer }}">+ Kunjungan</button>
-                                        <a href="{{ Route::has('admin.customers.edit') ? route('admin.customers.edit', $c) : '#' }}" class="ang-btn ang-btn-sm">Edit</a>
+                                        <button type="button" class="ang-btn ang-btn-sm" data-ang-modal="ang-customer-modal"
+                                                data-edit-id="{{ $c->id_customer }}"
+                                                data-edit-nama="{{ $c->nama }}"
+                                                data-edit-wa="{{ $c->no_wa }}"
+                                                data-edit-birth="{{ optional($c->birth_date)->format('Y-m-d') }}"
+                                                data-edit-consent="{{ $c->wa_consent ? '1' : '0' }}">Edit</button>
                                     </div>
                                 </td>
                             </tr>

@@ -30,15 +30,19 @@ class StoreCustomerRequest extends FormRequest
             $this->merge(['setuju_pesan' => $this->boolean('setuju_pesan')]);
         }
 
-        if ($this->has('birth_date') && $this->filled('birth_date')) {
-            try {
-                $d = \Carbon\Carbon::parse($this->input('birth_date'));
-                $this->merge([
-                    'lahir_tgl' => (int) $d->day,
-                    'lahir_bln' => (int) $d->month,
-                ]);
-            } catch (\Throwable $e) {
-                // ignore
+        if ($this->has('birth_date')) {
+            if ($this->filled('birth_date')) {
+                try {
+                    $d = \Carbon\Carbon::parse($this->input('birth_date'));
+                    $this->merge([
+                        'lahir_tgl' => (int) $d->day,
+                        'lahir_bln' => (int) $d->month,
+                    ]);
+                } catch (\Throwable $e) {
+                    // ignore
+                }
+            } else {
+                $this->merge(['lahir_tgl' => null, 'lahir_bln' => null]);
             }
         }
     }

@@ -43,12 +43,13 @@ class CustomerController extends Controller
         return new CustomerResource($customer);
     }
 
-    public function update(UpdateCustomerRequest $request, Customer $customer): CustomerResource
+    public function update(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
     {
         $customer->update($request->validated());
-        $customer->loadCount('kunjungan as visits_count');
 
-        return new CustomerResource($customer);
+        return redirect()
+            ->route('admin.customers.index')
+            ->with('status', 'Customer berhasil diperbarui.');
     }
 
     public function destroy(Customer $customer): JsonResponse

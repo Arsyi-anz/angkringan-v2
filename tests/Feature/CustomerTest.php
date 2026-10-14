@@ -107,4 +107,84 @@ class CustomerTest extends TestCase
 
         $this->get(route('admin.customers.export.pdf'))->assertOk();
     }
+
+    public function test_customer_can_be_updated_via_form(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin');
+        $customer = Customer::create([
+            'nama' => 'Budi',
+            'no_wa' => '6281234567890',
+            'lahir_tgl' => 12,
+            'lahir_bln' => 5,
+            'setuju_pesan' => true,
+        ]);
+
+        $this->put('/admin/customers/'.$customer->id_customer, [
+            '_ang_form' => 'customer',
+            '_ang_edit' => $customer->id_customer,
+            'nama' => 'Budi Santoso',
+            'no_wa' => '6281234567890',
+            'birth_date' => '1999-03-08',
+            'setuju_pesan' => '0',
+        ])->assertRedirect(route('admin.customers.index'));
+
+        $this->assertDatabaseHas('customer', [
+            'id_customer' => $customer->id_customer,
+            'nama' => 'Budi Santoso',
+            'lahir_tgl' => 8,
+            'lahir_bln' => 3,
+            'setuju_pesan' => false,
+        ]);
+
+        $this->assertEquals('Customer berhasil diperbarui.', session('status'));
+    }
+
+    public function test_update_can_clear_birth_date(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin');
+        $customer = Customer::create([
+            'nama' => 'C',
+            'no_wa' => '628333333333',
+            'lahir_tgl' => 5,
+            'lahir_bln' => 4,
+        ]);
+
+        $this->put('/admin/customers/'.$customer->id_customer, [
+            'nama' => 'C',
+            'no_wa' => '628333333333',
+            'birth_date' => '',
+        ])->assertRedirect(route('admin.customers.index'));
+
+        $this->assertDatabaseHas('customer', [
+            'id_customer' => $customer->id_customer,
+            'lahir_tgl' => null,
+            'lahir_bln' => null,
+        ]);
+    }
+
+    public function test_update_rejects_duplicate_no_wa(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin');
+        Customer::create(['nama' => 'A', 'no_wa' => '628111111111']);
+        $b = Customer::create(['nama' => 'B', 'no_wa' => '628222222222']);
+
+        $this->putJson('/admin/customers/'.$b->id_customer, [
+            'nama' => 'B',
+            'no_wa' => '628111111111',
+        ])->assertStatus(422)->assertJsonValidationErrors('no_wa');
+    }
+
+    public function test_customers_page_renders_edit_button(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin');
+        $customer = Customer::create(['nama' => 'Andi', 'no_wa' => '628555555551', 'lahir_tgl' => 1, 'lahir_bln' => 5]);
+
+        $this->get('/admin/customers')
+            ->assertOk()
+            ->assertSee('data-edit-id="'.$customer->id_customer.'"', false)
+            ->assertSee('data-edit-nama="Andi"', false)
+            ->assertSee('data-edit-birth="'.sprintf('%04d-%02d-%02d', 2000, 5, 1).'"', false)
+            ->assertSee('id="ang-customer-form"', false)
+            ->assertSee('data-store-action="', false);
+    }
 }
