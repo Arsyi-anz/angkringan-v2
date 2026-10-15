@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Hampers;
 use App\Models\Kunjungan;
 use App\Models\KuotaHampers;
+use App\Support\Pengaturan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -43,6 +44,31 @@ class BirthdayTest extends TestCase
         ]);
     }
 
+    /**
+     * Customer yang berulang tahun hari ini, lengkap dengan kunjungan
+     * pada hari-hari sebelumnya (masuk jendela evaluasi).
+     */
+    private function birthdayCustomer(string $nama, int $visits, Admin $admin, string $noWa): Customer
+    {
+        $customer = Customer::create([
+            'nama' => $nama,
+            'no_wa' => $noWa,
+            'lahir_tgl' => today()->day,
+            'lahir_bln' => today()->month,
+            'setuju_pesan' => true,
+        ]);
+
+        for ($i = 1; $i <= $visits; $i++) {
+            Kunjungan::create([
+                'id_customer' => $customer->id_customer,
+                'tgl_kunjungan' => today()->subDays($i)->toDateString(),
+                'id_admin' => $admin->id_admin,
+            ]);
+        }
+
+        return $customer;
+    }
+
     public function test_guest_is_redirected_from_birthday_page(): void
     {
         $this->get('/admin/birthday')->assertRedirect(route('login'));
@@ -52,13 +78,7 @@ class BirthdayTest extends TestCase
     {
         $admin = $this->makeAdmin();
 
-        Customer::create([
-            'nama' => 'Andi',
-            'no_wa' => '628511111111',
-            'lahir_tgl' => 1,
-            'lahir_bln' => 5,
-            'setuju_pesan' => true,
-        ]);
+        $this->birthdayCustomer('Andi', 5, $admin, '628511111111');
         Customer::create(['nama' => 'Tanpa Lahir', 'no_wa' => '628522222222']);
 
         $this->actingAs($admin, 'admin')
@@ -97,26 +117,27 @@ class BirthdayTest extends TestCase
             ->assertViewHas('quotaYear', 40);
     }
 
-    public function test_visits_window_count_only_counts_recent_visits(): void
+    public function test_visits_window_count_only_counts_visits_before_birthday(): void
     {
         $admin = $this->makeAdmin();
-        $customer = Customer::create([
-            'nama' => 'Budi',
-            'no_wa' => '628533333333',
-            'lahir_tgl' => 12,
-            'lahir_bln' => 3,
-        ]);
+        $customer = $this->birthdayCustomer('Budi', 0, $admin, '628533333333');
 
-        // Di dalam jendela 90 hari.
+        // Di dalam jendela: 1 hari sebelum ulang tahun.
         Kunjungan::create([
             'id_customer' => $customer->id_customer,
-            'tgl_kunjungan' => now()->subDays(89)->toDateString(),
+            'tgl_kunjungan' => today()->subDays(1)->toDateString(),
             'id_admin' => $admin->id_admin,
         ]);
-        // Di luar jendela 90 hari.
+        // Terlalu lama, di luar jendela window_days hari.
         Kunjungan::create([
             'id_customer' => $customer->id_customer,
-            'tgl_kunjungan' => now()->subDays(100)->toDateString(),
+            'tgl_kunjungan' => today()->subDays(100)->toDateString(),
+            'id_admin' => $admin->id_admin,
+        ]);
+        // Setelah hari ulang tahun, tidak ikut dihitung.
+        Kunjungan::create([
+            'id_customer' => $customer->id_customer,
+            'tgl_kunjungan' => today()->addDays(3)->toDateString(),
             'id_admin' => $admin->id_admin,
         ]);
 
@@ -128,7 +149,7 @@ class BirthdayTest extends TestCase
 
                 return $member !== null
                     && (int) $member->visits_window_count === 1
-                    && (int) $member->visits_count === 2;
+                    && (int) $member->visits_count === 3;
             });
     }
 
@@ -149,20 +170,10 @@ class BirthdayTest extends TestCase
     public function test_member_who_already_claimed_hampers_is_not_eligible(): void
     {
         $admin = $this->makeAdmin();
-        $claimed = Customer::create([
-            'nama' => 'Citra',
-            'no_wa' => '628566666666',
-            'lahir_tgl' => 3,
-            'lahir_bln' => 7,
-        ]);
+        $claimed = $this->birthdayCustomer('Citra', 5, $admin, '628566666666');
         $this->claimHampers($claimed);
 
-        Customer::create([
-            'nama' => 'Dewi',
-            'no_wa' => '628577777777',
-            'lahir_tgl' => 4,
-            'lahir_bln' => 8,
-        ]);
+        $this->birthdayCustomer('Dewi', 5, $admin, '628577777777');
 
         $this->actingAs($admin, 'admin')
             ->get(route('admin.birthday.index'))
@@ -171,6 +182,30 @@ class BirthdayTest extends TestCase
             ->assertSee('Layak dievaluasi', false)
             ->assertViewHas('eligibleCount', 1)
             ->assertViewHas('members', fn ($members) => $members->firstWhere('nama', 'Citra')->hampers_eligible === false);
+    }
+
+    public function test_member_below_min_visits_is_not_eligible(): void
+    {
+        $admin = $this->makeAdmin();
+        $this->birthdayCustomer('Endah', 4, $admin, '628588888888');
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.birthday.index'))
+            ->assertOk()
+            ->assertViewHas('eligibleCount', 0)
+            ->assertViewHas('members', fn ($members) => $members->firstWhere('nama', 'Endah')->hampers_eligible === false);
+    }
+
+    public function test_min_visits_setting_gates_eligibility(): void
+    {
+        Pengaturan::simpan('min_visits', '3');
+        $admin = $this->makeAdmin();
+        $this->birthdayCustomer('Fajar', 3, $admin, '628599999999');
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.birthday.index'))
+            ->assertOk()
+            ->assertViewHas('eligibleCount', 1);
     }
 
     public function test_birthday_page_has_the_stat_styles_it_uses(): void

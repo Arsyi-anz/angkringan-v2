@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Admin;
 use App\Models\Customer;
 use App\Models\Hampers;
+use App\Models\Kunjungan;
 use App\Models\Voucher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -23,11 +24,36 @@ class DashboardTest extends TestCase
         ]);
     }
 
+    /**
+     * Customer yang berulang tahun hari ini dengan sejumlah kunjungan
+     * dalam jendela evaluasi (tanggal lahir - window_days).
+     */
+    private function birthdayCustomer(Admin $admin, string $nama, int $visits, array $attributes = []): Customer
+    {
+        $customer = Customer::create(array_merge([
+            'nama' => $nama,
+            'no_wa' => '628511111111',
+            'lahir_tgl' => today()->day,
+            'lahir_bln' => today()->month,
+            'setuju_pesan' => true,
+        ], $attributes));
+
+        for ($i = 1; $i <= $visits; $i++) {
+            Kunjungan::create([
+                'id_customer' => $customer->id_customer,
+                'tgl_kunjungan' => today()->subDays($i)->toDateString(),
+                'id_admin' => $admin->id_admin,
+            ]);
+        }
+
+        return $customer;
+    }
+
     public function test_dashboard_is_rendered_with_summary_data(): void
     {
         $admin = $this->makeAdmin();
 
-        Customer::create(['nama' => 'Andi', 'no_wa' => '628511111111', 'lahir_tgl' => 1, 'lahir_bln' => 5, 'setuju_pesan' => true]);
+        $this->birthdayCustomer($admin, 'Andi', 5);
         Customer::create(['nama' => 'Budi', 'no_wa' => '628522222222']);
 
         Voucher::create(['kode_voucher' => 'IG-AAA111', 'kategori' => 'IG', 'status' => 'AVAILABLE']);
@@ -51,7 +77,7 @@ class DashboardTest extends TestCase
     public function test_customer_with_birthdate_who_already_claimed_hampers_is_not_eligible(): void
     {
         $admin = $this->makeAdmin();
-        $customer = Customer::create(['nama' => 'Citra', 'no_wa' => '628533333333', 'lahir_tgl' => 3, 'lahir_bln' => 7]);
+        $customer = $this->birthdayCustomer($admin, 'Citra', 5, ['setuju_pesan' => false]);
 
         $idPesan = DB::table('pesan_ulang_tahun')->insertGetId([
             'id_customer' => $customer->id_customer,

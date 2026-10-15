@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\EvaluasiHampers;
+use App\Support\Pengaturan;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -87,12 +89,34 @@ class Customer extends Model
     }
 
     /**
-     * Layak menerima hampers: punya tanggal lahir dan belum klaim tahun berjalan.
+     * Kunjungan dine-in dalam jendela window_days hari sebelum ulang tahun
+     * (nilai sudah disiapkan EvaluasiHampers untuk pembacaan massal).
+     */
+    protected function visitsWindowCount(): Attribute
+    {
+        return Attribute::get(function () {
+            if (array_key_exists('visits_window_count', $this->attributes)) {
+                return (int) $this->attributes['visits_window_count'];
+            }
+
+            return app(EvaluasiHampers::class)->kunjunganJendela($this);
+        });
+    }
+
+    /**
+     * Layak menerima hampers: punya tanggal lahir, memenuhi minimal kunjungan
+     * dalam jendela sebelum ulang tahun, dan belum klaim tahun berjalan.
      */
     protected function hampersEligible(): Attribute
     {
         return Attribute::get(function () {
             if ($this->lahir_tgl === null || $this->lahir_bln === null) {
+                return false;
+            }
+
+            $minVisits = Pengaturan::ambilInt('min_visits', Pengaturan::DEFAULT_MIN_VISITS);
+
+            if ($this->visitsWindowCount < $minVisits) {
                 return false;
             }
 

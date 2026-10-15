@@ -1,0 +1,43 @@
+/* ang-voucher.css : tambahan khusus Manajemen Voucher.
+   Memakai juga ang-customer.css (umum), ang-modal.css (modal/field), ang-validate.css (.ang-mono, badge, konfirmasi). */
+.ang-chan-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
+.ang-chan{display:flex;flex-direction:column;gap:6px;padding:18px;background:var(--ang-surface);border:1px solid var(--ang-line);border-radius:var(--ang-radius)}
+.ang-chan-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ang-chip{display:inline-grid;place-items:center;min-width:34px;height:24px;padding:0 8px;border-radius:6px;background:var(--ang-terra-soft);color:var(--ang-terra-dark);font-size:11.5px;font-weight:800}
+.ang-count-tag{padding:2px 9px;border-radius:999px;background:#F1E9E1;color:var(--ang-muted);font-size:12px;font-weight:600}
+.ang-chan-name{margin-top:8px;font-weight:800;font-size:16px;color:var(--ang-brown)}
+.ang-chan-format{color:var(--ang-muted);font-size:12.5px}
+.ang-chan-num{margin-top:6px;font-size:32px;font-weight:800;line-height:1.1;letter-spacing:-.5px;color:var(--ang-brown)}
+.ang-chan-label{color:var(--ang-muted);font-size:12.5px}
+.ang-limit{height:6px;margin-top:8px;border-radius:999px;background:#F0E6DC;overflow:hidden}
+.ang-limit>span{display:block;height:100%;border-radius:999px;background:var(--ang-terra)}
+.ang-chan-actions{display:grid;gap:8px;margin-top:auto;padding-top:14px}
+.ang-chan-actions .ang-btn{justify-content:center;width:100%}
+.ang-btn[disabled]{opacity:.5;cursor:not-allowed}
+
+.ang-toolbar .ang-select{width:auto;min-width:160px}
+.ang-toolbar .ang-tag{margin-left:auto}
+.ang-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-top:1px solid var(--ang-line);color:var(--ang-muted);font-size:13px}
+.ang-pager-nav{display:flex;gap:8px}
+.ang-link-off{opacity:.45;pointer-events:none}
+.ang-nowrap{white-space:nowrap}
+
+.ang-gen-source{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:12px 14px;border-radius:10px;background:var(--ang-paper);border:1px solid var(--ang-line)}
+.ang-gen-source strong{color:var(--ang-brown)}
+
+/* modal cetak brosur */
+.ang-print{width:min(700px,calc(100% - 32px))}
+.ang-print-grid{display:grid;grid-template-columns:minmax(0,1fr) 200px;gap:22px;align-items:start}
+.ang-print-summary{margin:4px 0 12px;padding:12px 14px;border-radius:10px;background:var(--ang-terra-soft);color:#5A3B2C;font-size:13px}
+.ang-print-preview{margin:0;text-align:center}
+.ang-print-preview canvas{display:block;width:100%;height:auto;border:1px solid var(--ang-line);border-radius:8px;background:var(--ang-paper)}
+.ang-print-preview figcaption{margin-top:6px;color:var(--ang-muted);font-size:12px}
+.ang-progress{display:block;width:100%;height:10px;margin:6px 0 4px;accent-color:var(--ang-terra)}
+.ang-print-form [hidden]{display:none}
+
+@media (max-width:1000px){.ang-chan-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){
+  .ang-chan-grid{grid-template-columns:minmax(0,1fr)}
+  .ang-print-grid{grid-template-columns:minmax(0,1fr)}
+  .ang-print-preview canvas{max-width:200px;margin:0 auto}
+}

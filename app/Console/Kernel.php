@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Tiap pagi (waktu Indonesia) kirim pesan ulang tahun hari itu.
+        $schedule->command('birthday:send')
+            ->dailyAt('08:00')
+            ->timezone('Asia/Jakarta')
+            ->withoutOverlapping();
     }
 
     /**

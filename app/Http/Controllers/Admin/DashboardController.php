@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Voucher;
+use App\Services\EvaluasiHampers;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly EvaluasiHampers $evaluasi) {}
+
     public function index(): View
     {
         $year = now()->year;
@@ -18,13 +21,7 @@ class DashboardController extends Controller
         $withBirthDate = Customer::whereNotNull('lahir_tgl')->whereNotNull('lahir_bln')->count();
         $withConsent = Customer::where('setuju_pesan', true)->count();
 
-        $hampersEligible = Customer::query()
-            ->whereNotNull('lahir_tgl')
-            ->whereNotNull('lahir_bln')
-            ->whereDoesntHave('hampers', function (Builder $query) use ($year) {
-                $query->where('tahun_kuota', $year);
-            })
-            ->count();
+        $hampersEligible = $this->evaluasi->hitungLayak();
 
         $vouchersCreated = Voucher::count();
         $vouchersUsed = Voucher::where('status', 'USED')->count();
@@ -53,6 +50,9 @@ class DashboardController extends Controller
             ->orderByDesc('id_customer')
             ->limit(5)
             ->get();
+
+        // Agar badge "Layak hampers" di tabel tidak query kunjungan per baris.
+        $this->evaluasi->tandai($latestCustomers);
 
         return view('dashboard.ang-index', compact(
             'totalCustomers',
