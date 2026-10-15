@@ -36,13 +36,7 @@
                         <option value="all">Semua kode brosur</option>
                     </select>
                 </div>
-                <div class="ang-field">
-                    <label class="ang-label" for="ang-p-mode">Kode per lembar</label>
-                    <select class="ang-input" id="ang-p-mode" data-print-mode>
-                        <option value="unique">Satu kode per voucher ({{ count($slots) }} kode)</option>
-                        <option value="same">Satu kode di semua voucher</option>
-                    </select>
-                </div>
+                <p class="ang-field-note">Satu lembar voucher memakai {{ count($slots) }} kode berbeda.</p>
 
                 <p class="ang-print-summary" data-print-summary aria-live="polite">Memuat data...</p>
                 <p class="ang-field-note" data-print-note hidden></p>

@@ -68,6 +68,20 @@ class VoucherManagementTest extends TestCase
         $this->assertFileExists(public_path('images/brosur-voucher.jpeg'));
     }
 
+    public function test_print_modal_always_uses_one_code_per_voucher(): void
+    {
+        $html = $this->actingAs($this->makeAdmin(), 'admin')
+            ->get(route('admin.vouchers.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('data-print-scope', $html);
+        // Pilihan "kode per lembar" dihapus: defaultnya satu kode per voucher.
+        $this->assertStringNotContainsString('data-print-mode', $html);
+        $this->assertStringNotContainsString('Satu kode di semua voucher', $html);
+        $this->assertStringContainsString('kode berbeda', $html);
+    }
+
     public function test_dashboard_manage_voucher_button_points_to_management_page(): void
     {
         $this->actingAs($this->makeAdmin(), 'admin')

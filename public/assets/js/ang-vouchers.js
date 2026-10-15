@@ -72,7 +72,6 @@
   var progressTextEl = print.querySelector('[data-print-progress-text]');
   var errorEl = print.querySelector('[data-print-error]');
   var scopeSel = print.querySelector('[data-print-scope]');
-  var modeSel = print.querySelector('[data-print-mode]');
   var previewEl = print.querySelector('[data-print-canvas]');
 
   var templateUrl = print.getAttribute('data-template') || '';
@@ -110,20 +109,11 @@
   }
 
   function buildSheets(list) {
-    var mode = modeSel && modeSel.value === 'same' ? 'same' : 'unique';
+    // Selalu satu kode per voucher: satu lembar memakai sejumlah slot kode berbeda.
     var per = Math.max(1, slots.length);
     var hasil = [];
-    var i;
 
-    if (mode === 'same') {
-      for (i = 0; i < list.length; i++) {
-        hasil.push(slots.map(function () { return list[i]; }));
-      }
-
-      return hasil;
-    }
-
-    for (i = 0; i + per <= list.length; i += per) {
+    for (var i = 0; i + per <= list.length; i += per) {
       hasil.push(list.slice(i, i + per));
     }
 
@@ -259,7 +249,7 @@
       return;
     }
 
-    if ((modeSel && modeSel.value !== 'same') && list.length % slots.length !== 0) {
+    if (list.length % slots.length !== 0) {
       showNote((list.length % slots.length) + ' kode tidak terpakai karena tidak penuh satu lembar.');
     }
 
@@ -414,9 +404,9 @@
     });
   }
 
-  [scopeSel, modeSel].forEach(function (el) {
-    if (el) el.addEventListener('change', function () { if (!running) update(); });
-  });
+  if (scopeSel) {
+    scopeSel.addEventListener('change', function () { if (!running) update(); });
+  }
 
   // muat ulang data tiap modal dibuka (baik lewat tombol maupun auto-open)
   if (typeof MutationObserver === 'function') {
