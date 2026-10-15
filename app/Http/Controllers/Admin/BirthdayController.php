@@ -5,27 +5,22 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\KuotaHampers;
+use App\Support\Pengaturan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 
 class BirthdayController extends Controller
 {
     /**
-     * Kriteria evaluasi hampers (sebaiknya diambil dari Pengaturan Program
-     * ketika halaman itu sudah ada).
+     * Kriteria evaluasi hampers. Nilainya disimpan di halaman Pengaturan Program.
      */
-    private const MIN_VISITS = 5;
-
-    private const WINDOW_DAYS = 90;
-
     public function index(): View
     {
         $year = now()->year;
-        $windowDays = self::WINDOW_DAYS;
-        $minVisits = self::MIN_VISITS;
+        $windowDays = Pengaturan::ambilInt('window_days', Pengaturan::DEFAULT_WINDOW_DAYS);
+        $minVisits = Pengaturan::ambilInt('min_visits', Pengaturan::DEFAULT_MIN_VISITS);
 
-        $kuota = KuotaHampers::query()->where('tahun', $year)->value('kuota_maks');
-        $quotaYear = $kuota === null ? 100 : (int) $kuota;
+        $quotaYear = KuotaHampers::tahun($year);
 
         $withBirthDate = Customer::query()
             ->whereNotNull('lahir_tgl')

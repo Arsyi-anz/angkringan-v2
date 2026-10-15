@@ -14,11 +14,29 @@
     <div class="ang-modal-body">
         <div class="ang-msg">
             <p class="ang-msg-title">Jika belum layak:</p>
-            <p>Selamat ulang tahun, <span class="ang-ph">[Nama]</span>! Semoga sehat dan bahagia selalu. Terima kasih sudah menjadi bagian dari Angkringan.</p>
+            <p><b>Selamat Ulang Tahun! 🎂</b>
+
+<br><br>Hai, <span class="ang-ph">[Nama]</span>! Selamat bertambah usia, ya! 🥳 Semoga selalu sehat, bahagia, dilancarkan rezekinya, dan semua harapan baikmu segera terwujud.
+
+<br><br>Terima kasih sudah menjadi bagian dari keluarga ANGKRINGAN HOTBER. Semoga hari spesialmu dipenuhi kebahagiaan dan hal-hal baik! 🧡
+
+<br><br>Salam hangat,
+<b>ANGKRINGAN HOTBER</b></p>
         </div>
         <div class="ang-msg">
             <p class="ang-msg-title">Jika layak dan kuota tersedia:</p>
-            <p>Selamat ulang tahun, <span class="ang-ph">[Nama]</span>! Ada hampers spesial dari Angkringan untuk Anda. Silakan datang ke outlet dan tunjukkan chat WhatsApp ini kepada kasir untuk klaim hampers. Selamat menikmati hari istimewa Anda!</p>
+            <p><b>Selamat Ulang Tahun! 🎂</b>
+
+<br><br>Hai, <span class="ang-ph">[Nama]</span>! Selamat bertambah usia, ya! 🥳 Semoga selalu sehat, bahagia, dilancarkan rezekinya, dan semua impianmu tercapai.
+
+<br><br>Sebagai bentuk terima kasih karena sudah menjadi bagian dari keluarga ANGKRINGAN HOTBER, kami punya sedikit hadiah spesial untukmu! 🎁
+
+<br><br>Silakan datang ke outlet ANGKRINGAN HOTBER dan tunjukkan chat WhatsApp ini kepada kasir untuk klaim hampers ulang tahunmu.
+
+<br><br>Semoga hadiah kecil dari kami bisa menambah kebahagiaan di hari istimewamu. Terima kasih sudah menjadi bagian dari perjalanan ANGKRINGAN HOTBER! 🧡
+
+<br><br>Salam hangat,
+<b>ANGKRINGAN HOTBER</b></p>
         </div>
     </div>
 

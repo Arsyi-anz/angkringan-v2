@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BirthdayController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\VisitController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,4 +49,8 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
 
     Route::get('/birthday', [BirthdayController::class, 'index'])->name('birthday.index');
+
+    Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/brochure', [SettingsController::class, 'brochure'])->name('settings.brochure');
 });
