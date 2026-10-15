@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\BirthdayController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\VisitController;
@@ -45,4 +46,6 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
 
     Route::get('/visits', [VisitController::class, 'index'])->name('visits.index');
     Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
+
+    Route::get('/birthday', [BirthdayController::class, 'index'])->name('birthday.index');
 });

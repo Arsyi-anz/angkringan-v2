@@ -91,6 +91,18 @@
 .ang-empty{padding:48px 18px;text-align:center;color:var(--ang-muted)}
 .ang-empty strong{display:block;color:var(--ang-text);margin-bottom:4px}
 
+.ang-notice{
+  margin:0 0 20px;padding:11px 16px;border-radius:10px;
+  background:var(--ang-terra-soft);border:1px solid var(--ang-line);
+  color:var(--ang-text);font-size:13px;
+}
+.ang-notice strong{color:var(--ang-brown)}
+
+.ang-panel-head{padding:18px 20px 14px}
+.ang-panel-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.ang-panel-title{margin:0;font-size:16px;font-weight:800;color:var(--ang-brown)}
+.ang-panel-sub{margin:2px 0 0;color:var(--ang-muted);font-size:13px}
+
 @media (max-width:900px){
   .ang-burger{display:inline-flex}
   .ang-topbar{padding:0 16px}

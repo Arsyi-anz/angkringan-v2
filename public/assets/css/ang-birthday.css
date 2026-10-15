@@ -1,0 +1,20 @@
+/* ang-birthday.css : tambahan khusus Birthday & Hampers.
+   Komponen umum (stats, panel, table, badge, notice) ada di ang-customer.css. */
+.ang-stats.is-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ang-badge-no{background:#F6DDD7;color:#9B3A27}
+.ang-fineprint{margin:16px 2px 0;color:var(--ang-muted);font-size:12.5px}
+.ang-fineprint strong{color:var(--ang-text)}
+
+/* isi modal pratinjau pesan */
+.ang-modal-wide{width:min(540px,calc(100% - 32px))}
+.ang-msg{margin-bottom:14px;padding:16px;border-radius:12px;background:var(--ang-paper);border:1px solid var(--ang-line)}
+.ang-msg-title{margin:0 0 8px;font-weight:800;color:var(--ang-brown)}
+.ang-msg p{margin:0;line-height:1.6}
+.ang-ph{padding:0 6px;border-radius:5px;background:var(--ang-terra-soft);color:var(--ang-terra-dark);font-weight:700}
+.ang-modal-fine{margin:4px 0 0;color:var(--ang-muted);font-size:12.5px}
+
+@media (max-width:900px){
+  .ang-stats.is-3{grid-template-columns:minmax(0,1fr)}
+  .ang-stats.is-3 .ang-stat{border-left:0;border-top:1px solid rgba(255,255,255,.12)}
+  .ang-stats.is-3 .ang-stat:first-child{border-top:0}
+}
