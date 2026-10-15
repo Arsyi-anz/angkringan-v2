@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\VisitController;
+use App\Http\Controllers\Admin\VoucherController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,6 +50,10 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
 
     Route::get('/birthday', [BirthdayController::class, 'index'])->name('birthday.index');
+
+    Route::get('/vouchers/validate', [VoucherController::class, 'validatePage'])->name('vouchers.validate');
+    Route::post('/vouchers/check', [VoucherController::class, 'check'])->name('vouchers.check');
+    Route::patch('/vouchers/{voucher}', [VoucherController::class, 'redeem'])->name('vouchers.redeem');
 
     Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');

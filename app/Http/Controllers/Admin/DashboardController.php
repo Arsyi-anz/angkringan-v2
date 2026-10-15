@@ -30,12 +30,7 @@ class DashboardController extends Controller
         $vouchersUsed = Voucher::where('status', 'USED')->count();
         $unusedVouchers = Voucher::where('status', 'AVAILABLE')->count();
 
-        $labels = [
-            'IG' => 'Instagram',
-            'FB' => 'Facebook',
-            'TT' => 'TikTok',
-            'BRO' => 'Brosur',
-        ];
+        $labels = Voucher::KATEGORI_LABELS;
 
         $voucherSources = Voucher::query()
             ->selectRaw('kategori, COUNT(*) as total')

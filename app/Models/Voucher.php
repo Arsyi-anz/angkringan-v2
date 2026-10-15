@@ -2,10 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class Voucher extends Model
 {
+    public const KATEGORI_LABELS = [
+        'IG' => 'Instagram',
+        'FB' => 'Facebook',
+        'TT' => 'TikTok',
+        'BRO' => 'Brosur',
+    ];
+
     protected $table = 'voucher';
 
     protected $primaryKey = 'id_voucher';
@@ -23,4 +31,24 @@ class Voucher extends Model
     protected $casts = [
         'used_at' => 'datetime',
     ];
+
+    protected function id(): Attribute
+    {
+        return Attribute::get(fn () => $this->id_voucher);
+    }
+
+    protected function code(): Attribute
+    {
+        return Attribute::get(fn () => $this->kode_voucher);
+    }
+
+    protected function sourceLabel(): Attribute
+    {
+        return Attribute::get(fn () => self::KATEGORI_LABELS[$this->kategori] ?? $this->kategori);
+    }
+
+    protected function isUsed(): Attribute
+    {
+        return Attribute::get(fn () => $this->status === 'USED');
+    }
 }
