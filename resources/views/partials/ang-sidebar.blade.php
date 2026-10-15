@@ -27,9 +27,9 @@
 
 <aside class="ang-sidebar" aria-label="Menu utama">
     <div class="ang-brand">
-        <span class="ang-brand-mark">A</span>
+        <img src="{{ asset('images/logo.png') }}" class="ang-brand-logo" alt="Angkringan Hotber">
         <span>
-            <span class="ang-brand-name">Angkringan</span>
+            <span class="ang-brand-name">Angkringan Hotber</span>
             <span class="ang-brand-sub">Loyalty console</span>
         </span>
     </div>

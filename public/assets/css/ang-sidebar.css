@@ -7,13 +7,14 @@
   padding:20px 14px;
   z-index:50;
 }
-.ang-brand{display:flex;align-items:center;gap:12px;padding:4px 8px 22px}
-.ang-brand-mark{
-  width:40px;height:40px;border-radius:11px;
-  display:grid;place-items:center;
-  background:var(--ang-terra);color:#fff;
-  font-weight:800;font-size:18px;
+.ang-brand{display:flex;align-items:center;gap:3px;padding:4px 8px 22px}
+.ang-brand-logo{
+  width: 60px;          /* Mengunci lebar logo agar tidak terlalu besar */
+  height: auto;         /* Membiarkan tinggi menyesuaikan secara otomatis (mencegah peyang) */
+  object-fit: contain;  /* Menjaga seluruh bagian logo tetap terlihat utuh */
+  background: none;     /* Menghapus warna latar belakang cokelat/jingga bawaan */
 }
+
 .ang-brand-name{display:block;color:#fff;font-weight:800;font-size:16px;letter-spacing:.2px;line-height:1.2}
 .ang-brand-sub{display:block;color:#C9AE9B;font-size:12px}
 
