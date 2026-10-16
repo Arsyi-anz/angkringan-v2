@@ -49,22 +49,6 @@ body {
     display: block;
 }
 
-.app-content {
-    padding: 1.5rem;
-    flex-grow: 1;
-}
-
-.app-footer {
-    padding: 1rem 1.5rem;
-    font-size: .8rem;
-    color: var(--neutral-500);
-    border-top: 1px solid var(--neutral-100);
-}
-
-.sidebar-toggle {
-    display: none;
-}
-
 /* ---------- Buttons ---------- */
 .btn-brand {
     background: var(--brand-accent);
@@ -143,18 +127,4 @@ body {
 .section-subtitle {
     color: var(--neutral-600);
     font-size: .88rem;
-}
-
-.nav-tabs .nav-link.active {
-    color: var(--brand-accent);
-    border-color: var(--neutral-200) var(--neutral-200) #fff;
-    font-weight: 600;
-}
-
-.nav-tabs .nav-link {
-    color: var(--neutral-600);
-}
-
-.progress-bar.bg-brand {
-    background-color: var(--brand-accent) !important;
 }
