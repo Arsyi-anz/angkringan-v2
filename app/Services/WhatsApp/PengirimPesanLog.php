@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
- * Driver simulasi: pesan dicatat ke log aplikasi.
+ * Driver simulasi: pesan dicatat ke log khusus storage/logs/wa.log.
  * Dipakai selama gateway WhatsApp sungguhan belum tersambung.
  */
 class PengirimPesanLog implements PengirimPesan
 {
     public function kirim(string $nomor, string $pesan): string
     {
-        Log::info('Simulasi kirim WhatsApp', [
+        Log::channel('whatsapp')->info('Simulasi kirim WhatsApp', [
             'nomor' => $nomor,
             'pesan' => $pesan,
         ]);

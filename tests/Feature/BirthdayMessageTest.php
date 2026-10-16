@@ -33,6 +33,15 @@ class BirthdayMessageTest extends TestCase
         ]);
     }
 
+    protected function tearDown(): void
+    {
+        foreach (glob(storage_path('logs/wa-test-*.log')) ?: [] as $file) {
+            @unlink($file);
+        }
+
+        parent::tearDown();
+    }
+
     private function fakePengirim(): object
     {
         $fake = new class implements PengirimPesan
@@ -253,5 +262,112 @@ class BirthdayMessageTest extends TestCase
         $this->artisan('schedule:list')
             ->expectsOutputToContain('birthday:send')
             ->assertExitCode(0);
+    }
+
+    public function test_dry_run_lists_decisions_without_writing_data(): void
+    {
+        $pengirim = $this->fakePengirim();
+        $this->birthdayCustomer(); // HAMPERS - 5 kunjungan
+        $this->birthdayCustomer(['nama' => 'Budi', 'no_wa' => '628522222222'], 4); // UCAPAN - kunjungan kurang
+        $this->birthdayCustomer([
+            'nama' => 'Citra',
+            'no_wa' => '628533333333',
+            'setuju_pesan' => false,
+        ]); // DILEWATI - tanpa consent
+
+        $this->artisan('birthday:send', ['--dry-run' => true])
+            ->expectsOutputToContain('HAMPERS - memenuhi syarat')
+            ->expectsOutputToContain('UCAPAN - kunjungan 4/5 belum mencukupi')
+            ->expectsOutputToContain('DILEWATI - tanpa consent WA')
+            ->expectsOutputToContain('1 HAMPERS, 1 ucapan saja, 1 dilewati')
+            ->assertExitCode(0);
+
+        $this->assertCount(0, $pengirim->kirim);
+        $this->assertDatabaseCount('pesan_ulang_tahun', 0);
+        $this->assertDatabaseCount('hampers', 0);
+    }
+
+    public function test_dry_run_marks_already_sent_member_as_skipped(): void
+    {
+        $this->fakePengirim();
+        $this->birthdayCustomer();
+
+        $this->artisan('birthday:send')->assertExitCode(0);
+
+        $this->artisan('birthday:send', ['--dry-run' => true])
+            ->expectsOutputToContain('DILEWATI - pesan sudah terkirim tahun ini')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseCount('pesan_ulang_tahun', 1);
+        $this->assertDatabaseCount('hampers', 1);
+    }
+
+    public function test_date_option_requires_dry_run(): void
+    {
+        $pengirim = $this->fakePengirim();
+        $this->birthdayCustomer();
+
+        $this->artisan('birthday:send', ['--date' => today()->toDateString()])->assertExitCode(1);
+
+        $this->assertCount(0, $pengirim->kirim);
+        $this->assertDatabaseCount('pesan_ulang_tahun', 0);
+    }
+
+    public function test_dry_run_with_date_simulates_another_day(): void
+    {
+        $pengirim = $this->fakePengirim();
+        $this->birthdayCustomer(); // berulang tahun hari ini
+
+        $tanggal = today()->addMonths(2);
+        Customer::create([
+            'nama' => 'Indah',
+            'no_wa' => '628599999999',
+            'lahir_tgl' => $tanggal->day,
+            'lahir_bln' => $tanggal->month,
+            'setuju_pesan' => true,
+        ]);
+
+        $this->artisan('birthday:send', ['--dry-run' => true, '--date' => $tanggal->toDateString()])
+            ->expectsOutputToContain('Indah')
+            ->expectsOutputToContain($tanggal->toFormattedDateString())
+            ->assertExitCode(0);
+
+        $this->assertCount(0, $pengirim->kirim);
+        $this->assertDatabaseCount('pesan_ulang_tahun', 0);
+    }
+
+    public function test_dry_run_with_date_does_not_leak_virtual_today_into_app(): void
+    {
+        $tanggal = today()->addMonths(2);
+
+        $this->artisan('birthday:send', ['--dry-run' => true, '--date' => $tanggal->toDateString()])
+            ->assertExitCode(0);
+
+        $this->assertSame(today()->toDateString(), now()->toDateString());
+    }
+
+    public function test_invalid_date_format_is_rejected(): void
+    {
+        $this->artisan('birthday:send', ['--dry-run' => true, '--date' => '12-01-2026'])
+            ->assertExitCode(1);
+    }
+
+    public function test_simulated_send_is_written_to_separate_wa_log(): void
+    {
+        $path = storage_path('logs/wa-test-'.uniqid().'.log');
+        config(['logging.channels.whatsapp' => [
+            'driver' => 'single',
+            'path' => $path,
+            'level' => 'debug',
+        ]]);
+
+        $this->birthdayCustomer();
+        $this->artisan('birthday:send')->assertExitCode(0);
+
+        $this->assertFileExists($path);
+        $isi = (string) file_get_contents($path);
+        $this->assertStringContainsString('Simulasi kirim WhatsApp', $isi);
+        $this->assertStringContainsString('628511111111', $isi);
+        $this->assertStringContainsString('klaim hampers ulang tahunmu', $isi);
     }
 }
