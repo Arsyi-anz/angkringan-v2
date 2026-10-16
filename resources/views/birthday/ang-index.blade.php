@@ -24,6 +24,7 @@
             <svg class="ang-ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
         </label>
         <div class="ang-crumb">Workspace / <strong>Birthday &amp; Hampers</strong></div>
+        @include('partials.ang-user-menu')
     </header>
 
     <main class="ang-page">

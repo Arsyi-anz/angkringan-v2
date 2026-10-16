@@ -70,4 +70,16 @@ class AdminLoginTest extends TestCase
 
         $this->assertGuest('admin');
     }
+
+    public function test_dashboard_shows_user_menu_with_logout_form(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        $html = $this->get(route('admin.dashboard'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('action="'.route('admin.logout').'"', $html);
+        $this->assertStringContainsString('assets/js/ang-usermenu.js', $html);
+        $this->assertSame(1, substr_count($html, 'assets/css/ang-usermenu.css'));
+        $this->assertSame(1, substr_count($html, 'assets/js/ang-usermenu.js'));
+    }
 }

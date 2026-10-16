@@ -34,20 +34,6 @@
   border-radius:0 4px 4px 0;background:#F0B58E;
 }
 
-.ang-sidebar-user{
-  display:flex;align-items:center;gap:12px;
-  margin-top:12px;padding:14px 8px 4px;
-  border-top:1px solid rgba(255,255,255,.12);
-}
-.ang-avatar-sm{
-  width:36px;height:36px;border-radius:50%;
-  display:grid;place-items:center;
-  background:var(--ang-brown-700);color:#F5DCCB;
-  font-weight:700;font-size:12px;
-}
-.ang-user-name{display:block;color:#fff;font-weight:700;line-height:1.2}
-.ang-user-role{display:block;color:#C9AE9B;font-size:12px}
-
 @media (max-width:900px){
   .ang-sidebar{
     position:fixed;left:0;top:0;width:var(--ang-sidebar-w);

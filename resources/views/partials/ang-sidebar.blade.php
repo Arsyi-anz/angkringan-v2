@@ -51,12 +51,4 @@
             </ul>
         @endforeach
     </nav>
-
-    <div class="ang-sidebar-user">
-        <span class="ang-avatar-sm">{{ strtoupper(substr(auth()->user()->name ?? 'AD', 0, 2)) }}</span>
-        <span>
-            <span class="ang-user-name">{{ auth()->user()->name ?? 'Administrator' }}</span>
-            <span class="ang-user-role">Admin outlet</span>
-        </span>
-    </div>
 </aside>
