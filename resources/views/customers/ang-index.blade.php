@@ -21,9 +21,15 @@
                 <h1 class="ang-title">Data Customer</h1>
                 <p class="ang-lead">Satu nomor WhatsApp untuk satu member. Tanggal lahir bersifat opsional dan persetujuan pesan wajib dicatat.</p>
             </div>
-            <button type="button" class="ang-btn ang-btn-primary" data-ang-modal="ang-customer-modal">
-                Tambah customer
-            </button>
+            <div class="ang-page-actions">
+                <button type="button" class="ang-btn ang-btn-primary" data-ang-modal="ang-customer-modal">
+                    Tambah customer
+                </button>
+                @include('partials.ang-export-menu', [
+                    'csvUrl' => Route::has('admin.customers.export') ? route('admin.customers.export', request()->query()) : '#',
+                    'pdfUrl' => Route::has('admin.customers.export.pdf') ? route('admin.customers.export.pdf', request()->query()) : '#',
+                ])
+            </div>
         </div>
 
         @if (session('status'))
@@ -61,10 +67,6 @@
                     <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari nama atau nomor WA" aria-label="Cari customer">
                 </div>
                 <span class="ang-count">{{ $customers->count() }} customer</span>
-                <a href="{{ Route::has('admin.customers.export') ? route('admin.customers.export') : '#' }}" class="ang-btn">
-                    <svg class="ang-ico" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg>
-                    Export CSV
-                </a>
             </form>
 
             <div class="ang-table-wrap">

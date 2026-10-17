@@ -8,6 +8,7 @@ use App\Http\Requests\Voucher\GenerateVoucherRequest;
 use App\Models\Voucher;
 use App\Support\Pengaturan;
 use App\Support\VoucherKuota;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -120,6 +121,21 @@ class VoucherController extends Controller
 
             fclose($handle);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $vouchers = $this->filter($request)->get();
+
+        $pdf = Pdf::loadView('pdf.vouchers', [
+            'vouchers' => $vouchers,
+            'filters' => [
+                'q' => trim((string) $request->query('q')),
+                'source' => strtoupper(trim((string) $request->query('source'))),
+            ],
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('voucher-'.now()->format('Ymd-His').'.pdf');
     }
 
     public function validatePage(): View

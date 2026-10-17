@@ -14,7 +14,7 @@
      | $channels : [['code'=>'IG','name'=>'Instagram','count'=>1], ['code'=>'FB',...], ['code'=>'TT',...], ['code'=>'BRO','name'=>'Brosur',...]]
      | $limits   : ['brochure' => 2000, 'digital' => 50]  (digital = IG + FB + TT digabung)
      | $vouchers : paginator (code, source_code, source_label, created_at, used_at, is_used)
-     | Route: admin.vouchers.generate (POST), admin.vouchers.codes (GET JSON), admin.vouchers.export (GET), admin.vouchers.redeem (PATCH)
+     | Route: admin.vouchers.generate (POST), admin.vouchers.codes (GET JSON), admin.vouchers.export (GET CSV), admin.vouchers.export.pdf (GET PDF), admin.vouchers.redeem (PATCH)
      */
     $limits      = $limits ?? ['brochure' => 2000, 'digital' => 50];
     $channels    = $channels ?? [];
@@ -43,10 +43,10 @@
                 <h1 class="ang-title">Manajemen Voucher</h1>
                 <p class="ang-lead">Generate kode unik berdasarkan kanal. Kode yang sudah dibuat disimpan di daftar dan tidak boleh dipakai dua kali.</p>
             </div>
-            <a href="{{ Route::has('admin.vouchers.export') ? route('admin.vouchers.export', request()->query()) : '#' }}" class="ang-btn">
-                <svg class="ang-ico" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg>
-                Export kode
-            </a>
+            @include('partials.ang-export-menu', [
+                'csvUrl' => Route::has('admin.vouchers.export') ? route('admin.vouchers.export', request()->query()) : '#',
+                'pdfUrl' => Route::has('admin.vouchers.export.pdf') ? route('admin.vouchers.export.pdf', request()->query()) : '#',
+            ])
         </div>
 
         @if (session('status'))

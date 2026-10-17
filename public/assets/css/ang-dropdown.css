@@ -1,0 +1,18 @@
+/* ang-dropdown.css : dropdown generik (mis. tombol Export) */
+.ang-dd{position:relative}
+.ang-dd-menu{
+  position:absolute;right:0;top:calc(100% + 6px);z-index:30;
+  min-width:160px;padding:6px;
+  background:var(--ang-surface);border:1px solid var(--ang-line);border-radius:12px;
+  box-shadow:0 16px 36px rgba(46,24,16,.18);
+}
+.ang-dd-menu[hidden]{display:none}
+.ang-dd-item{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:10px 12px;border:0;border-radius:8px;
+  background:transparent;color:var(--ang-text);font-weight:600;text-align:left;
+  font-size:13px;text-decoration:none;cursor:pointer;
+}
+.ang-dd-item:hover{background:var(--ang-terra-soft);color:var(--ang-terra-dark)}
+.ang-dd .ang-btn-chev{width:14px;height:14px;fill:none;stroke:var(--ang-muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+.ang-dd-btn[aria-expanded="true"] .ang-btn-chev{transform:rotate(180deg)}

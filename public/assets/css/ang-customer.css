@@ -12,6 +12,7 @@
 
 .ang-page{width:100%;max-width:1180px;margin:0 auto;padding:32px}
 .ang-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:24px}
+.ang-page-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .ang-title{margin:0;font-size:30px;line-height:1.15;font-weight:800;letter-spacing:-.4px;color:var(--ang-brown)}
 .ang-lead{margin:8px 0 0;max-width:560px;color:var(--ang-muted)}
 

@@ -275,4 +275,20 @@ class VoucherManagementTest extends TestCase
         $this->assertStringContainsString('BRO-BBB222', $filtered);
         $this->assertStringNotContainsString('IG-AAA111', $filtered);
     }
+
+    public function test_export_pdf_follows_search_filters(): void
+    {
+        $this->insertVoucher('IG-AAA111', 'IG', '2026-01-04 09:00:00');
+        $this->insertVoucher('BRO-BBB222', 'BRO', '2026-01-05 10:00:00');
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        $pdf = $this->get(route('admin.vouchers.export.pdf'))
+            ->assertOk()
+            ->assertDownload();
+        $this->assertStringContainsString('.pdf', (string) $pdf->headers->get('content-disposition'));
+
+        $this->get(route('admin.vouchers.export.pdf', ['source' => 'BRO', 'q' => 'BRO-B']))
+            ->assertOk()
+            ->assertDownload();
+    }
 }

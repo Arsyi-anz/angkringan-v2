@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/ang-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/ang-visit-modal.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/ang-usermenu.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/ang-dropdown.css') }}">
     @stack('ang-styles')
 </head>
 <body class="ang-app">
@@ -30,6 +31,7 @@
 <script src="{{ asset('assets/js/ang-customer-modal.js') }}"></script>
 <script src="{{ asset('assets/js/ang-visit-modal.js') }}"></script>
 <script src="{{ asset('assets/js/ang-usermenu.js') }}"></script>
+<script src="{{ asset('assets/js/ang-dropdown.js') }}"></script>
 @stack('ang-scripts')
 </body>
 </html>
