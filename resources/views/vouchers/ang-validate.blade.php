@@ -107,7 +107,7 @@
             </section>
         </div>
 
-        <section class="ang-panel">
+        <!-- <section class="ang-panel">
             <div class="ang-panel-head">
                 <h2 class="ang-panel-title">Voucher terbaru</h2>
                 <p class="ang-panel-sub">Tandai USED setelah transaksi dine-in selesai</p>
@@ -150,7 +150,7 @@
                     </tbody>
                 </table>
             </div>
-        </section>
+        </section> -->
     </main>
 
     @include('partials.ang-redeem-modal')
