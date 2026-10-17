@@ -16,7 +16,7 @@
 .ang-result strong{display:block}
 .ang-result span.ang-result-sub{display:block;font-size:13px}
 .ang-result.is-valid{background:var(--ang-ok-bg);border-color:var(--ang-ok);color:#254F2C}
-.ang-result.is-used{background:var(--ang-off-bg);border-color:var(--ang-off);color:#6B4515}
+.ang-result.is-used{background:#F6DDD7;border-color:#B3402A;color:#7C2E1F}
 .ang-result.is-invalid{background:#F6DDD7;border-color:#B3402A;color:#7C2E1F}
 
 /* ketentuan */
