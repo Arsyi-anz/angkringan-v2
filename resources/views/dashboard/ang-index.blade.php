@@ -108,14 +108,14 @@
                     </li>
                     <li>
                         <span>
-                            <span class="ang-activity-name">Customer punya tanggal lahir</span>
+                            <span class="ang-activity-name">Data ulang tahun customer</span>
                             <span class="ang-activity-sub">Data untuk ucapan ulang tahun</span>
                         </span>
                         <span class="ang-activity-num">{{ $fmt($withBirthDate ?? 0) }}</span>
                     </li>
                     <li>
                         <span>
-                            <span class="ang-activity-name">Persetujuan pesan WA</span>
+                            <span class="ang-activity-name">Broadcast WA</span>
                             <span class="ang-activity-sub">Customer yang memberi persetujuan</span>
                         </span>
                         <span class="ang-activity-num">{{ $fmt($withConsent ?? 0) }}</span>

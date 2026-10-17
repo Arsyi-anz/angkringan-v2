@@ -36,10 +36,10 @@
                 </div>
             </div>
 
-            <div class="form-check mb-3">
+            <!-- <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" name="remember" id="remember">
                 <label class="form-check-label small" for="remember">Ingat saya</label>
-            </div>
+            </div> -->
 
             <button type="submit" class="btn btn-brand w-100">Masuk</button>
         </form>
