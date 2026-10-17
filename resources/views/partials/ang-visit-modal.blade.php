@@ -57,14 +57,8 @@
                 @error('visited_at')<span class="ang-error">{{ $message }}</span>@enderror
             </div>
 
-            <div class="ang-field">
-                <label class="ang-label" for="ang-v-type">Jenis kunjungan</label>
-                <div class="ang-lockwrap">
-                    <input class="ang-input" id="ang-v-type" type="text" value="Dine-in (wajib)" readonly aria-readonly="true">
-                    <svg class="ang-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
-                </div>
-                <input type="hidden" name="visit_type" value="dine_in">
-            </div>
+            {{-- Selalu dine-in; input tersembunyi memenuhi validasi visit_type. --}}
+            <input type="hidden" name="visit_type" value="dine_in">
         </div>
 
         <div class="ang-modal-foot">
