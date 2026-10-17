@@ -72,6 +72,7 @@
                     <span class="ang-chan-label">Sisa kuota: <strong>{{ $fmt($left) }}</strong> dari {{ $fmt($isBro ? $limits['brochure'] : $limits['digital']) }}</span>
                     <div class="ang-chan-actions">
                         <button type="button" class="ang-btn ang-btn-sm" data-ang-modal="ang-gen-modal"
+                                @disabled($left < 1)
                                 data-gen-source="{{ $c['code'] }}" data-gen-name="{{ $c['name'] }}"
                                 data-gen-format="{{ $c['code'] }}-XXXXXX" data-gen-max="{{ $left }}">
                             <svg class="ang-ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
