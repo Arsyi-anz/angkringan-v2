@@ -69,6 +69,19 @@
 }
 .ang-table td{padding:14px 18px;border-bottom:1px solid #F0E6DC;vertical-align:middle}
 .ang-table tbody tr:last-child td{border-bottom:0}
+
+/* Header kolom yang bisa diurutkan (panah atas/bawah ala Windows) */
+.ang-sort-th{padding:0}
+.ang-sort{
+  display:flex;align-items:center;gap:6px;width:100%;
+  padding:11px 18px;text-decoration:none;
+  color:var(--ang-muted);font-size:12.5px;font-weight:600;
+}
+.ang-sort:hover{color:var(--ang-terra-dark);background:#F5EBE3}
+.ang-sort.is-active{color:var(--ang-terra-dark)}
+.ang-sort-ico{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ang-sort-ico path{opacity:.32}
+.ang-sort-ico path.is-on{opacity:1;stroke:var(--ang-terra)}
 .ang-table tbody tr:hover{background:#FDFAF7}
 .ang-num{text-align:right}
 

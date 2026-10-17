@@ -17,6 +17,7 @@ class SearchCustomerRequest extends FormRequest
             'q' => ['nullable', 'string', 'max:50'],
             'bulan' => ['nullable', 'integer', 'between:1,12'],
             'per_page' => ['nullable', 'integer', 'between:1,100'],
+            'sort' => ['nullable', 'string', 'max:20'],
         ];
     }
 

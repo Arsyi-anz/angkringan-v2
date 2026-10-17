@@ -10,8 +10,9 @@
 @section('content')
     {{--
         Variabel dari controller:
-        $customers       : customer + kunjungan (name, whatsapp, last_visit_at, visits_count, visits_90d_count)
+        $customers       : customer + kunjungan (name, whatsapp, last_visit_at, visits_count, visits_window_count)
         $customerOptions : semua customer (id, name, whatsapp) untuk dropdown di modal
+        $windowDays      : rentang hari jendela sebelum ulang tahun (Pengaturan)
     --}}
     <header class="ang-topbar">
         <label for="ang-nav-toggle" class="ang-burger" aria-label="Buka menu">
@@ -54,8 +55,22 @@
                         <tr>
                             <th>Customer</th>
                             <th>Kunjungan terakhir</th>
-                            <th>Jumlah kunjungan</th>
-                            <th>Dalam 90 hari</th>
+                            <th class="ang-sort-th">
+                                @php
+                                    $sortNow = request('sort');
+                                    $sortNext = $sortNow === 'visits_asc' ? 'visits_desc' : 'visits_asc';
+                                    $sortUrl = request()->fullUrlWithQuery(['sort' => $sortNext]);
+                                @endphp
+                                <a class="ang-sort {{ $sortNow ? 'is-active' : '' }}" href="{{ $sortUrl }}"
+                                   title="Urutkan berdasarkan total kunjungan">
+                                    Total kunjungan
+                                    <svg class="ang-sort-ico" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path class="ang-sort-up {{ $sortNow === 'visits_asc' ? 'is-on' : '' }}" d="m6 14 6-6 6 6"/>
+                                        <path class="ang-sort-down {{ $sortNow === 'visits_desc' ? 'is-on' : '' }}" d="m6 10 6 6 6-6"/>
+                                    </svg>
+                                </a>
+                            </th>
+                            <th>Dalam {{ $windowDays }} hari</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,7 +93,7 @@
                                     @endif
                                 </td>
                                 <td><span class="ang-visit">{{ $c->visits_count }}</span></td>
-                                <td><span class="ang-period">{{ $c->visits_90d_count }}</span><span class="ang-period-sub">kunjungan</span></td>
+                                <td><span class="ang-period">{{ $c->visits_window_count }}</span><span class="ang-period-sub">kunjungan</span></td>
                             </tr>
                         @empty
                             <tr>
