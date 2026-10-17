@@ -69,13 +69,7 @@
                     <h2 class="ang-chan-name">{{ $c['name'] }}</h2>
                     <span class="ang-chan-format">Format: <span class="ang-mono">{{ $c['code'] }}-XXXXXX</span></span>
                     <span class="ang-chan-num">{{ $fmt($c['count']) }}</span>
-                    <span class="ang-chan-label">Kode di daftar voucher</span>
-                    @if ($isBro && $limits['brochure'] > 0)
-                        <div class="ang-limit" role="progressbar" aria-valuemin="0" aria-valuemax="{{ $limits['brochure'] }}" aria-valuenow="{{ $c['count'] }}" aria-label="Pemakaian batas voucher brosur">
-                            <span style="width: {{ min(100, round($c['count'] / $limits['brochure'] * 100, 1)) }}%"></span>
-                        </div>
-                        <span class="ang-chan-label">{{ $fmt($c['count']) }} dari {{ $fmt($limits['brochure']) }}</span>
-                    @endif
+                    <span class="ang-chan-label">Sisa kuota: <strong>{{ $fmt($left) }}</strong> dari {{ $fmt($isBro ? $limits['brochure'] : $limits['digital']) }}</span>
                     <div class="ang-chan-actions">
                         <button type="button" class="ang-btn ang-btn-sm" data-ang-modal="ang-gen-modal"
                                 data-gen-source="{{ $c['code'] }}" data-gen-name="{{ $c['name'] }}"

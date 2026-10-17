@@ -9,8 +9,6 @@
 .ang-chan-format{color:var(--ang-muted);font-size:12.5px}
 .ang-chan-num{margin-top:6px;font-size:32px;font-weight:800;line-height:1.1;letter-spacing:-.5px;color:var(--ang-brown)}
 .ang-chan-label{color:var(--ang-muted);font-size:12.5px}
-.ang-limit{height:6px;margin-top:8px;border-radius:999px;background:#F0E6DC;overflow:hidden}
-.ang-limit>span{display:block;height:100%;border-radius:999px;background:var(--ang-terra)}
 .ang-chan-actions{display:grid;gap:8px;margin-top:auto;padding-top:14px}
 .ang-chan-actions .ang-btn{justify-content:center;width:100%}
 .ang-btn[disabled]{opacity:.5;cursor:not-allowed}
