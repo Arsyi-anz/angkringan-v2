@@ -30,7 +30,11 @@ class AdminLoginTest extends TestCase
 
     public function test_login_page_is_rendered(): void
     {
-        $this->get('/login')->assertOk()->assertSee('Admin Angkringan');
+        $html = $this->get('/login')->assertOk()->assertSee('Admin Angkringan')->getContent();
+
+        $this->assertStringContainsString('rel="icon"', $html);
+        $this->assertStringContainsString('images/logo-favicon.png', $html);
+        $this->assertFileExists(public_path('images/logo-favicon.png'));
     }
 
     public function test_admin_can_login(): void
@@ -77,6 +81,8 @@ class AdminLoginTest extends TestCase
 
         $html = $this->get(route('admin.dashboard'))->assertOk()->getContent();
 
+        $this->assertStringContainsString('rel="icon"', $html);
+        $this->assertStringContainsString('images/logo-favicon.png', $html);
         $this->assertStringContainsString('action="'.route('admin.logout').'"', $html);
         $this->assertStringContainsString('assets/js/ang-usermenu.js', $html);
         $this->assertSame(1, substr_count($html, 'assets/css/ang-usermenu.css'));
