@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Console\Commands\SendBirthdayMessages;
 use App\Models\Admin;
 use App\Models\Customer;
 use App\Models\Hampers;
@@ -112,8 +113,13 @@ class BirthdayMessageTest extends TestCase
         $this->assertSame($pesan->id_pesan, $hampers->id_pesan);
         $this->assertSame((int) today()->year, (int) $hampers->tahun_kuota);
         $this->assertSame('BELUM_DIAMBIL', $hampers->status);
-        $this->assertSame(today()->addDays(14)->toDateString(), $hampers->batas_ambil->toDateString());
+        $this->assertSame(today()->addDays(SendBirthdayMessages::BATAS_HARI)->toDateString(), $hampers->batas_ambil->toDateString());
         $this->assertMatchesRegularExpression('/^HAM-[A-Z0-9]{6}$/', $hampers->kode_klaim);
+        // Kalimat batas pengambilan menyebut tanggal +BATAS_HARI dalam format Indonesia.
+        $this->assertStringContainsString(
+            'Hampers dapat diambil sampai tanggal '.today()->addDays(SendBirthdayMessages::BATAS_HARI)->locale('id')->translatedFormat('d F Y').'.',
+            $pengirim->kirim[0]['pesan'],
+        );
         $this->assertSame(TemplatePesanUlangTahun::layak($customer), $pengirim->kirim[0]['pesan']);
     }
 

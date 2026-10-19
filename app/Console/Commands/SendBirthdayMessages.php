@@ -19,9 +19,9 @@ use Throwable;
 class SendBirthdayMessages extends Command
 {
     /**
-     * Hampers boleh diambil dalam 14 hari sejak pesan terkirim.
+     * Hampers boleh diambil dalam 7 hari sejak pesan terkirim.
      */
-    private const BATAS_HARI = 14;
+    public const BATAS_HARI = 7;
 
     protected $signature = 'birthday:send
         {--date= : Tanggal ulang tahun yang disimulasikan, format YYYY-MM-DD (wajib bersama --dry-run)}
@@ -235,19 +235,10 @@ class SendBirthdayMessages extends Command
             'id_customer' => $customer->id_customer,
             'id_pesan' => $pesan->id_pesan,
             'tahun_kuota' => $tahun,
-            'kode_klaim' => $this->kodeKlaim(),
+            'kode_klaim' => Hampers::kodeKlaimBaru(),
             'batas_ambil' => now()->addDays(self::BATAS_HARI)->toDateString(),
             'status' => 'BELUM_DIAMBIL',
         ]);
-    }
-
-    private function kodeKlaim(): string
-    {
-        do {
-            $kode = 'HAM-'.strtoupper(Str::random(6));
-        } while (Hampers::query()->where('kode_klaim', $kode)->exists());
-
-        return $kode;
     }
 
     private function sisaKuota(int $tahun): int

@@ -50,6 +50,7 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::post('/visits', [VisitController::class, 'store'])->name('visits.store');
 
     Route::get('/birthday', [BirthdayController::class, 'index'])->name('birthday.index');
+    Route::patch('/hampers/klaim/{customer}', [BirthdayController::class, 'klaim'])->name('hampers.claim');
 
     Route::get('/vouchers/export', [VoucherController::class, 'export'])->name('vouchers.export');
     Route::get('/vouchers/export/pdf', [VoucherController::class, 'exportPdf'])->name('vouchers.export.pdf');

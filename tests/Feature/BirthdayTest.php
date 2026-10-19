@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Console\Commands\SendBirthdayMessages;
 use App\Models\Admin;
 use App\Models\Customer;
 use App\Models\Hampers;
 use App\Models\Kunjungan;
 use App\Models\KuotaHampers;
+use App\Models\PesanUlangTahun;
 use App\Support\Pengaturan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -40,28 +42,33 @@ class BirthdayTest extends TestCase
             'tahun_kuota' => now()->year,
             'kode_klaim' => 'HAM-ABC123',
             'batas_ambil' => now()->addDays(14)->toDateString(),
-            'status' => 'BELUM_DIAMBIL',
+            'status' => 'DIAMBIL',
+            'diambil_at' => now(),
         ]);
     }
 
     /**
-     * Customer yang berulang tahun hari ini, lengkap dengan kunjungan
+     * Customer yang berulang tahun, lengkap dengan kunjungan
      * pada hari-hari sebelumnya (masuk jendela evaluasi).
+     *
+     * @param  int  $ulangTahunLalu  berapa hari yang lalu ulang tahunnya (0 = hari ini)
      */
-    private function birthdayCustomer(string $nama, int $visits, Admin $admin, string $noWa): Customer
+    private function birthdayCustomer(string $nama, int $visits, Admin $admin, string $noWa, int $ulangTahunLalu = 0): Customer
     {
+        $ulangTahun = today()->subDays($ulangTahunLalu);
+
         $customer = Customer::create([
             'nama' => $nama,
             'no_wa' => $noWa,
-            'lahir_tgl' => today()->day,
-            'lahir_bln' => today()->month,
+            'lahir_tgl' => $ulangTahun->day,
+            'lahir_bln' => $ulangTahun->month,
             'setuju_pesan' => true,
         ]);
 
         for ($i = 1; $i <= $visits; $i++) {
             Kunjungan::create([
                 'id_customer' => $customer->id_customer,
-                'tgl_kunjungan' => today()->subDays($i)->toDateString(),
+                'tgl_kunjungan' => $ulangTahun->copy()->subDays($i)->toDateString(),
                 'id_admin' => $admin->id_admin,
             ]);
         }
@@ -104,6 +111,62 @@ class BirthdayTest extends TestCase
         $html = $this->get(route('admin.birthday.index'))->assertOk()->getContent();
 
         $this->assertSame(1, substr_count($html, 'id="ang-message-modal"'));
+    }
+
+    public function test_visits_column_shows_fraction_or_qualifies_text(): void
+    {
+        $admin = $this->makeAdmin();
+
+        // 5 dari 5 (default min_visits) -> teks "Memenuhi syarat".
+        $this->birthdayCustomer('Andi', 5, $admin, '628544444444');
+        // Baru 3 -> tampil pecahan "3/5".
+        $this->birthdayCustomer('Budi', 3, $admin, '628555555555');
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.birthday.index'))
+            ->assertOk()
+            ->assertSee('<span class="ang-badge ang-badge-ok">Memenuhi syarat</span>', false)
+            ->assertDontSee('<span class="ang-visit">5/5</span>', false)
+            ->assertSee('<span class="ang-visit">3/5</span>', false);
+    }
+
+    public function test_status_pesan_column_shows_send_status_without_consent_column(): void
+    {
+        $admin = $this->makeAdmin();
+        $terkirim = $this->birthdayCustomer('Tari', 5, $admin, '628566666666');
+        $gagal = $this->birthdayCustomer('Galih', 5, $admin, '628577777777');
+        $this->birthdayCustomer('Rina', 5, $admin, '628588888888');
+
+        PesanUlangTahun::create([
+            'id_customer' => $terkirim->id_customer,
+            'tahun' => now()->year,
+            'jenis' => PesanUlangTahun::JENIS_HAMPERS,
+            'status' => PesanUlangTahun::STATUS_TERKIRIM,
+        ]);
+        PesanUlangTahun::create([
+            'id_customer' => $gagal->id_customer,
+            'tahun' => now()->year,
+            'jenis' => PesanUlangTahun::JENIS_HAMPERS,
+            'status' => PesanUlangTahun::STATUS_GAGAL,
+            'error' => 'Gateway down',
+        ]);
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.birthday.index'))
+            ->assertOk()
+            ->assertDontSee('<th>Consent WA</th>', false)
+            ->assertSee('<th>Status pesan</th>', false)
+            ->assertSee('<span class="ang-badge ang-badge-ok">Pesan Terkirim</span>', false)
+            ->assertSee('<span class="ang-badge ang-badge-no">Pesan Gagal Dikirim</span>', false)
+            // Tiga member tanpa record pesan tahun ini -> "Belum Layak".
+            ->assertSee('<span class="ang-badge ang-badge-off">Belum Layak</span>', false)
+            ->assertViewHas('members', function ($members) use ($terkirim, $gagal) {
+                $byId = $members->keyBy('id_customer');
+
+                return $byId[$terkirim->id_customer]->status_pesan === PesanUlangTahun::STATUS_TERKIRIM
+                    && $byId[$gagal->id_customer]->status_pesan === PesanUlangTahun::STATUS_GAGAL
+                    && $byId[$gagal->id_customer]->getAttribute('status_pesan') !== null;
+            });
     }
 
     public function test_quota_year_is_read_from_kuota_hampers_table(): void
@@ -178,8 +241,9 @@ class BirthdayTest extends TestCase
         $this->actingAs($admin, 'admin')
             ->get(route('admin.birthday.index'))
             ->assertOk()
-            ->assertSee('Ucapan saja', false)
-            ->assertSee('Layak dievaluasi', false)
+            ->assertSee('<span class="ang-badge ang-badge-ok">Sudah KLAIM</span>', false)
+            // Dewi layak tapi belum ada record -> tombol KLAIM.
+            ->assertSee('>KLAIM</button>', false)
             ->assertViewHas('eligibleCount', 1)
             ->assertViewHas('members', fn ($members) => $members->firstWhere('nama', 'Citra')->hampers_eligible === false);
     }
@@ -219,5 +283,113 @@ class BirthdayTest extends TestCase
         // .ang-panel-title & .ang-panel-sub dipindahkan ke ang-customer.css.
         $this->assertStringContainsString('assets/css/ang-customer.css', $html);
         $this->assertStringContainsString('class="ang-panel-title"', $html);
+    }
+
+    private function makePesan(Customer $customer, string $jenis = 'HAMPERS'): int
+    {
+        return DB::table('pesan_ulang_tahun')->insertGetId([
+            'id_customer' => $customer->id_customer,
+            'tahun' => now()->year,
+            'jenis' => $jenis,
+            'status' => 'TERKIRIM',
+        ]);
+    }
+
+    public function test_status_hampers_shows_claim_button_and_expires_after_deadline(): void
+    {
+        $admin = $this->makeAdmin();
+        $tahun = now()->year;
+
+        // Layak, belum ada record hampers -> tombol KLAIM (route ke customer).
+        $siap = $this->birthdayCustomer('Tari', 5, $admin, '628566666666');
+
+        // Lewat batas ambil, belum diklaim -> otomatis KEDALUWARSA + badge.
+        $lewat = $this->birthdayCustomer('Galih', 5, $admin, '628577777777');
+        Hampers::create([
+            'id_customer' => $lewat->id_customer,
+            'id_pesan' => $this->makePesan($lewat),
+            'tahun_kuota' => $tahun,
+            'kode_klaim' => 'HAM-LEWAT1',
+            'batas_ambil' => now()->subDay()->toDateString(),
+            'status' => 'BELUM_DIAMBIL',
+        ]);
+
+        // Sudah pernah diambil -> badge Sudah KLAIM.
+        $ambil = $this->birthdayCustomer('Rina', 5, $admin, '628588888888');
+        Hampers::create([
+            'id_customer' => $ambil->id_customer,
+            'id_pesan' => $this->makePesan($ambil),
+            'tahun_kuota' => $tahun,
+            'kode_klaim' => 'HAM-AMBIL1',
+            'batas_ambil' => now()->addDays(3)->toDateString(),
+            'status' => 'DIAMBIL',
+            'diambil_at' => now(),
+        ]);
+
+        // Layak tanpa record, ulang tahun sudah lewat > 7 hari -> Kadaluwarsa.
+        $this->birthdayCustomer('Eka', 5, $admin, '628599999999', 10);
+
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.birthday.index'))
+            ->assertOk()
+            ->assertSee('data-claim-action="'.route('admin.hampers.claim', $siap).'"', false)
+            ->assertSee('>KLAIM</button>', false)
+            ->assertSee('<span class="ang-badge ang-badge-no">Kadaluwarsa</span>', false)
+            ->assertSee('<span class="ang-badge ang-badge-ok">Sudah KLAIM</span>', false);
+
+        $this->assertDatabaseHas('hampers', ['kode_klaim' => 'HAM-LEWAT1', 'status' => 'KEDALUWARSA']);
+    }
+
+    public function test_claim_route_creates_hampers_and_marks_as_taken(): void
+    {
+        $admin = $this->makeAdmin();
+        $customer = $this->birthdayCustomer('Andi', 5, $admin, '628511111111');
+
+        $this->actingAs($admin, 'admin')
+            ->from(route('admin.birthday.index'))
+            ->patch(route('admin.hampers.claim', $customer))
+            ->assertRedirect(route('admin.birthday.index'));
+
+        $hampers = Hampers::query()->where('id_customer', $customer->id_customer)->sole();
+
+        $this->assertSame('DIAMBIL', $hampers->status);
+        $this->assertNotNull($hampers->diambil_at);
+        $this->assertSame($admin->id_admin, $hampers->id_admin);
+        $this->assertNull($hampers->id_pesan);
+        $this->assertSame(
+            today()->addDays(SendBirthdayMessages::BATAS_HARI)->toDateString(),
+            $hampers->batas_ambil->toDateString(),
+        );
+        $this->assertStringStartsWith('HAM-', $hampers->kode_klaim);
+        $this->assertEquals('Hampers '.$hampers->kode_klaim.' ditandai KLAIM.', session('status'));
+
+        // Halaman menampilkan Sudah KLAIM.
+        $this->actingAs($admin, 'admin')
+            ->get(route('admin.birthday.index'))
+            ->assertOk()
+            ->assertSee('<span class="ang-badge ang-badge-ok">Sudah KLAIM</span>', false)
+            ->assertDontSee('>KLAIM</button>', false);
+
+        // Klaim kedua kali ditolak dengan pesan.
+        $this->actingAs($admin, 'admin')
+            ->patch(route('admin.hampers.claim', $customer))
+            ->assertRedirect();
+        $this->assertEquals('Hampers untuk Andi sudah pernah diklaim.', session('status'));
+    }
+
+    public function test_claim_route_rejects_member_past_deadline(): void
+    {
+        $admin = $this->makeAdmin();
+        $customer = $this->birthdayCustomer('Eka', 5, $admin, '628599999999', 10);
+
+        $this->actingAs($admin, 'admin')
+            ->patch(route('admin.hampers.claim', $customer))
+            ->assertRedirect();
+
+        $this->assertEquals(
+            'Hampers untuk Eka sudah kadaluwarsa dan tidak dapat diklaim.',
+            session('status'),
+        );
+        $this->assertDatabaseCount('hampers', 0);
     }
 }

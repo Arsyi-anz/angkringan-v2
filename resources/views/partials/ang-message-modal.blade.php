@@ -33,6 +33,8 @@
 
 <br><br>Silakan datang ke outlet ANGKRINGAN HOTBER dan tunjukkan chat WhatsApp ini kepada kasir untuk klaim hampers ulang tahunmu.
 
+<br><br>Hampers dapat diambil sampai tanggal <b>{{ \Illuminate\Support\Carbon::now()->addDays(\App\Console\Commands\SendBirthdayMessages::BATAS_HARI)->locale('id')->translatedFormat('d F Y') }} </b>.
+
 <br><br>Semoga hadiah kecil dari kami bisa menambah kebahagiaan di hari istimewamu. Terima kasih sudah menjadi bagian dari perjalanan ANGKRINGAN HOTBER! 🧡
 
 <br><br>Salam hangat,
