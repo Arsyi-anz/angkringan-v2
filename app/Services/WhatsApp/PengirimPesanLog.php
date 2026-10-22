@@ -11,12 +11,14 @@ use Illuminate\Support\Str;
  */
 class PengirimPesanLog implements PengirimPesan
 {
-    public function kirim(string $nomor, string $pesan): string
+    public function kirim(string $nomor, string $isi, ?string $templateKunci = null, array $params = []): string
     {
-        Log::channel('whatsapp')->info('Simulasi kirim WhatsApp', [
+        Log::channel('whatsapp')->info('Simulasi kirim WhatsApp', array_filter([
             'nomor' => $nomor,
-            'pesan' => $pesan,
-        ]);
+            'pesan' => $isi,
+            'template' => $templateKunci,
+            'params' => $params !== [] ? $params : null,
+        ], fn ($nilai) => $nilai !== null));
 
         return 'sim-'.Str::lower(Str::uuid());
     }

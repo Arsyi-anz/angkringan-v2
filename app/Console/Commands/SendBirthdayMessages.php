@@ -68,12 +68,20 @@ class SendBirthdayMessages extends Command
 
                 $layak = $customer->hampers_eligible && $sisaKuota > 0;
                 $jenis = $layak ? PesanUlangTahun::JENIS_HAMPERS : PesanUlangTahun::JENIS_BIASA;
+                $batasAmbil = now()->addDays(self::BATAS_HARI);
                 $isi = $layak
-                    ? TemplatePesanUlangTahun::layak($customer)
+                    ? TemplatePesanUlangTahun::layak($customer, $batasAmbil)
                     : TemplatePesanUlangTahun::tidakLayak($customer);
+                $templateKunci = $layak ? 'hampers' : 'biasa';
+                $params = $layak
+                    ? [
+                        $customer->name,
+                        $batasAmbil->copy()->locale('id')->translatedFormat('d F Y'),
+                    ]
+                    : [$customer->name];
 
                 try {
-                    $waMessageId = $pengirim->kirim($customer->whatsapp, $isi);
+                    $waMessageId = $pengirim->kirim($customer->whatsapp, $isi, $templateKunci, $params);
 
                     $pesan->fill([
                         'jenis' => $jenis,
@@ -94,7 +102,7 @@ class SendBirthdayMessages extends Command
                     $pesan->fill([
                         'jenis' => $jenis,
                         'status' => PesanUlangTahun::STATUS_GAGAL,
-                        'error' => Str::limit($e->getMessage(), 150),
+                        'error' => Str::limit($e->getMessage(), 147),
                         'dikirim_at' => now(),
                     ])->save();
 

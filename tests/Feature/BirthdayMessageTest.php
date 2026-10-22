@@ -51,13 +51,18 @@ class BirthdayMessageTest extends TestCase
 
             public ?\Throwable $gagal = null;
 
-            public function kirim(string $nomor, string $pesan): string
+            public function kirim(string $nomor, string $isi, ?string $templateKunci = null, array $params = []): string
             {
                 if ($this->gagal) {
                     throw $this->gagal;
                 }
 
-                $this->kirim[] = ['nomor' => $nomor, 'pesan' => $pesan];
+                $this->kirim[] = [
+                    'nomor' => $nomor,
+                    'pesan' => $isi,
+                    'template' => $templateKunci,
+                    'params' => $params,
+                ];
 
                 return 'msg-'.count($this->kirim);
             }
@@ -121,6 +126,11 @@ class BirthdayMessageTest extends TestCase
             $pengirim->kirim[0]['pesan'],
         );
         $this->assertSame(TemplatePesanUlangTahun::layak($customer), $pengirim->kirim[0]['pesan']);
+        $this->assertSame('hampers', $pengirim->kirim[0]['template']);
+        $this->assertSame([
+            'Andi',
+            today()->addDays(SendBirthdayMessages::BATAS_HARI)->locale('id')->translatedFormat('d F Y'),
+        ], $pengirim->kirim[0]['params']);
     }
 
     public function test_member_below_min_visits_gets_greeting_only(): void
@@ -132,6 +142,8 @@ class BirthdayMessageTest extends TestCase
 
         $this->assertCount(1, $pengirim->kirim);
         $this->assertStringNotContainsString('hampers ulang tahunmu', $pengirim->kirim[0]['pesan']);
+        $this->assertSame('biasa', $pengirim->kirim[0]['template']);
+        $this->assertSame(['Budi'], $pengirim->kirim[0]['params']);
 
         $pesan = PesanUlangTahun::query()->sole();
         $this->assertSame(PesanUlangTahun::JENIS_BIASA, $pesan->jenis);
