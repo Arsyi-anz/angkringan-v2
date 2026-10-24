@@ -3,7 +3,7 @@
   'use strict';
 
   var fmtId = new Intl.NumberFormat('id-ID');
-  var MAX_SHEETS = 200;
+  var MAX_SHEETS = 1000;
 
   function numberFormat(n) {
     return fmtId.format(n || 0);
