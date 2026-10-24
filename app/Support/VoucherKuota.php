@@ -12,7 +12,7 @@ class VoucherKuota
 
     public const LIMIT_DIGITAL_KEY = 'limit_voucher_digital';
 
-    public const DEFAULT_BROCHURE = 2000;
+    public const DEFAULT_BROCHURE = 6000;
 
     public const DEFAULT_DIGITAL = 50;
 
