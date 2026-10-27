@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Voucher\CheckVoucherRequest;
 use App\Http\Requests\Voucher\GenerateVoucherRequest;
 use App\Models\Voucher;
-use App\Support\Pengaturan;
+use App\Support\Brosur;
 use App\Support\VoucherKuota;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
@@ -216,8 +216,6 @@ class VoucherController extends Controller
 
     private function voucherTemplateUrl(): string
     {
-        $tersimpan = Pengaturan::ambil('brochure_voucher');
-
-        return asset($tersimpan ? 'images/brosur/'.$tersimpan : 'images/brosur-voucher.jpeg');
+        return Brosur::url('brochure_voucher');
     }
 }

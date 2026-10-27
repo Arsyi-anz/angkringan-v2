@@ -68,6 +68,17 @@ class SettingsTest extends TestCase
             ->assertDontSee('assets/img/brosur-poster.jpg', false);
     }
 
+    public function test_settings_page_falls_back_when_saved_brochure_file_is_missing(): void
+    {
+        Pengaturan::simpan('brochure_main', 'brochure_main-tidak-ada.jpeg');
+
+        $this->actingAs($this->makeAdmin(), 'admin')
+            ->get(route('admin.settings.edit'))
+            ->assertOk()
+            ->assertSee('images/brosur-poster.jpeg', false)
+            ->assertDontSee('images/brosur/brochure_main-tidak-ada.jpeg', false);
+    }
+
     public function test_settings_page_shows_saved_values(): void
     {
         Pengaturan::simpan('min_visits', '12');

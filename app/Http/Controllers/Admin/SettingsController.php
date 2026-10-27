@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StoreBrochureRequest;
 use App\Http\Requests\Settings\UpdateSettingsRequest;
 use App\Models\KuotaHampers;
+use App\Support\Brosur;
 use App\Support\Pengaturan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -14,36 +15,12 @@ use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
-    private const BROCHURES = [
-        'brochure_main' => [
-            'title' => 'Poster promo',
-            'note' => 'Gambar yang dibagikan ke customer',
-            'fallback' => 'images/brosur-poster.jpeg',
-        ],
-        'brochure_voucher' => [
-            'title' => 'Lembar voucher',
-            'note' => 'Bentuk voucher cetak yang dibawa customer',
-            'fallback' => 'images/brosur-voucher.jpeg',
-        ],
-    ];
-
     public function edit(): View
     {
         $minVisits = Pengaturan::ambilInt('min_visits', Pengaturan::DEFAULT_MIN_VISITS);
         $windowDays = Pengaturan::ambilInt('window_days', Pengaturan::DEFAULT_WINDOW_DAYS);
         $quotaYear = KuotaHampers::tahun(now()->year);
-
-        $brochures = [];
-        foreach (self::BROCHURES as $key => $meta) {
-            $tersimpan = Pengaturan::ambil($key);
-
-            $brochures[] = [
-                'key' => $key,
-                'title' => $meta['title'],
-                'note' => $meta['note'],
-                'url' => asset($tersimpan ? 'images/brosur/'.$tersimpan : $meta['fallback']),
-            ];
-        }
+        $brochures = Brosur::semua();
 
         return view('settings.ang-index', compact('minVisits', 'windowDays', 'quotaYear', 'brochures'));
     }
@@ -65,9 +42,9 @@ class SettingsController extends Controller
 
     public function brochure(StoreBrochureRequest $request): RedirectResponse
     {
-        File::ensureDirectoryExists($this->directory());
+        File::ensureDirectoryExists(Brosur::directory());
 
-        foreach (array_keys(self::BROCHURES) as $key) {
+        foreach (array_column(Brosur::semua(), 'key') as $key) {
             $file = $request->file($key);
 
             if (! $file) {
@@ -85,10 +62,10 @@ class SettingsController extends Controller
                 Str::lower($extension)
             );
 
-            $file->move($this->directory(), $filename);
+            $file->move(Brosur::directory(), $filename);
 
             if ($lama = Pengaturan::ambil($key)) {
-                File::delete($this->directory().DIRECTORY_SEPARATOR.$lama);
+                File::delete(Brosur::directory().DIRECTORY_SEPARATOR.$lama);
             }
 
             Pengaturan::simpan($key, $filename);
@@ -97,10 +74,5 @@ class SettingsController extends Controller
         return redirect()
             ->route('admin.settings.edit')
             ->with('status', 'Brosur program berhasil diperbarui.');
-    }
-
-    private function directory(): string
-    {
-        return public_path('images'.DIRECTORY_SEPARATOR.'brosur');
     }
 }
