@@ -69,6 +69,8 @@ class VoucherController extends Controller
     /**
      * Daftar kode untuk modal cetak brosur (dipakai oleh ang-vouchers.js).
      * Batch terakhir = kode dengan waktu pembuatan terbaru.
+     * Kode yang sudah pernah diunduh (downloaded_at terisi) tidak disertakan
+     * pada codes/latest, tetapi tetap muncul pada all untuk penomoran rentang custom.
      */
     public function codes(Request $request): JsonResponse
     {
@@ -81,6 +83,7 @@ class VoucherController extends Controller
         $rows = Voucher::query()
             ->where('kategori', $source)
             ->where('status', 'AVAILABLE')
+            ->whereNull('downloaded_at')
             ->orderByDesc('created_at')
             ->orderByDesc('id_voucher')
             ->get(['kode_voucher', 'created_at']);
@@ -91,11 +94,65 @@ class VoucherController extends Controller
             ? $rows->where('created_at', $terbaru->created_at)->pluck('kode_voucher')->values()
             : collect();
 
+        // Seluruh kode kanal (termasuk yang sudah terunduh), paling lama dulu.
+        // Dipakai sebagai nomor rentang custom supaya penomoran tidak bergeser.
+        $semua = Voucher::query()
+            ->where('kategori', $source)
+            ->orderBy('created_at')
+            ->orderBy('id_voucher')
+            ->get(['kode_voucher', 'downloaded_at']);
+
+        $all = $semua->map(fn (Voucher $voucher) => [
+            'code' => $voucher->kode_voucher,
+            'downloaded' => $voucher->downloaded_at !== null,
+        ])->values();
+
+        $sudahDiunduh = (int) $semua->filter(fn (Voucher $voucher) => $voucher->downloaded_at !== null)->count();
+
         return response()->json([
             'source' => $source,
             'total' => $codes->count(),
+            'total_all' => $all->count(),
+            'downloaded' => $sudahDiunduh,
             'codes' => $codes,
             'latest' => $latest,
+            'all' => $all,
+        ]);
+    }
+
+    /**
+     * Tandai kode sebagai sudah diunduh (dipanggil modal cetak setelah ZIP berhasil).
+     * Hanya kode AVAILABLE milik kanal terkait yang belum pernah ditandai.
+     */
+    public function markDownloaded(Request $request): JsonResponse
+    {
+        $source = strtoupper(trim((string) $request->input('source', 'BRO')));
+
+        if (! in_array($source, VoucherKuota::CHANNELS, true)) {
+            $source = 'BRO';
+        }
+
+        $request->validate([
+            'codes' => ['required', 'array', 'max:6000'],
+            'codes.*' => ['string', 'max:10', 'distinct'],
+        ]);
+
+        $codes = array_values(array_unique(array_map(
+            fn (string $kode) => strtoupper(trim($kode)),
+            $request->input('codes')
+        )));
+
+        $marked = Voucher::query()
+            ->where('kategori', $source)
+            ->where('status', 'AVAILABLE')
+            ->whereNull('downloaded_at')
+            ->whereIn('kode_voucher', $codes)
+            ->update(['downloaded_at' => now()]);
+
+        return response()->json([
+            'source' => $source,
+            'requested' => count($codes),
+            'marked' => $marked,
         ]);
     }
 

@@ -55,6 +55,7 @@ Route::middleware('auth:admin')->prefix('admin')->name('admin.')->group(function
     Route::get('/vouchers/export', [VoucherController::class, 'export'])->name('vouchers.export');
     Route::get('/vouchers/export/pdf', [VoucherController::class, 'exportPdf'])->name('vouchers.export.pdf');
     Route::get('/vouchers/codes', [VoucherController::class, 'codes'])->name('vouchers.codes');
+    Route::patch('/vouchers/downloaded', [VoucherController::class, 'markDownloaded'])->name('vouchers.downloaded');
     Route::post('/vouchers/generate', [VoucherController::class, 'generate'])->name('vouchers.generate');
     Route::get('/vouchers/validate', [VoucherController::class, 'validatePage'])->name('vouchers.validate');
     Route::post('/vouchers/check', [VoucherController::class, 'check'])->name('vouchers.check');

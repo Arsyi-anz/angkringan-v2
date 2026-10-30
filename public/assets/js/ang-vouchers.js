@@ -73,6 +73,11 @@
   var errorEl = print.querySelector('[data-print-error]');
   var scopeSel = print.querySelector('[data-print-scope]');
   var previewEl = print.querySelector('[data-print-canvas]');
+  var rangeWrap = print.querySelector('[data-print-range]');
+  var rangeFrom = print.querySelector('[data-print-range-from]');
+  var rangeTo = print.querySelector('[data-print-range-to]');
+  var markUrl = print.getAttribute('data-mark-url') || '';
+  var source = print.getAttribute('data-source') || 'BRO';
 
   var templateUrl = print.getAttribute('data-template') || '';
   var refWidth = parseInt(print.getAttribute('data-width'), 10) || 1131;
@@ -87,6 +92,8 @@
   var img = null;
   var codes = [];
   var latest = [];
+  var all = [];
+  var downloaded = 0;
   var ready = false;
   var running = false;
   var cancelled = false;
@@ -104,8 +111,90 @@
     noteEl.hidden = !text;
   }
 
-  function currentList() {
-    return scopeSel && scopeSel.value === 'all' ? codes : latest;
+  function currentScope() {
+    return scopeSel ? scopeSel.value : 'latest';
+  }
+
+  function scopeLabel() {
+    var scope = currentScope();
+
+    if (scope === 'all') return 'Semua kode';
+    if (scope === 'custom') {
+      return 'Rentang custom (kode ke-' + (rangeFrom ? rangeFrom.value : '?') + '–' + (rangeTo ? rangeTo.value : '?') + ')';
+    }
+
+    return 'Batch terakhir';
+  }
+
+  function perSheet() {
+    return Math.max(1, slots.length);
+  }
+
+  // Total kode kanal (termasuk yang sudah terunduh): sumber penomoran rentang custom.
+  function totalAll() {
+    return all.length || codes.length;
+  }
+
+  // Ujung rentang default: nomor terakhir yang menutup satu lembar penuh.
+  function defaultRangeEnd() {
+    var total = totalAll();
+    return Math.floor(total / perSheet()) * perSheet() || total;
+  }
+
+  function rangeBounds() {
+    return {
+      from: rangeFrom ? parseInt(rangeFrom.value, 10) : NaN,
+      to: rangeTo ? parseInt(rangeTo.value, 10) : NaN,
+    };
+  }
+
+  function customError() {
+    var b = rangeBounds();
+    var total = totalAll();
+
+    if (isNaN(b.from) || isNaN(b.to)) return 'Isi nomor awal dan nomor akhir rentang.';
+    if (b.from < 1 || b.to < 1) return 'Nomor rentang minimal 1.';
+    if (b.to < b.from) return 'Nomor akhir harus sama dengan atau lebih besar dari nomor awal.';
+    if (b.from > total) return 'Nomor awal melebihi jumlah kode (' + numberFormat(total) + ').';
+    if (b.to > total) return 'Nomor akhir melebihi jumlah kode (' + numberFormat(total) + ').';
+
+    return null;
+  }
+
+  // Irisan rentang pada nomor stabil (seluruh kode, paling lama = 1).
+  // Kode yang sudah terunduh tetap bernomor tapi tidak dicetak.
+  function rangeSelection() {
+    var b = rangeBounds();
+    var slice = all.slice(b.from - 1, b.to);
+    var list = [];
+    var dilewati = 0;
+
+    slice.forEach(function (item) {
+      if (item.downloaded) {
+        dilewati += 1;
+      } else {
+        list.push(item.code);
+      }
+    });
+
+    return { list: list, total: slice.length, dilewati: dilewati };
+  }
+
+  // tampilkan/sembunyikan input rentang; autofill hanya saat pindah scope atau data dimuat ulang
+  function syncRangeUI(autofill) {
+    var custom = currentScope() === 'custom';
+    if (rangeWrap) rangeWrap.hidden = !custom;
+    if (!custom || !rangeFrom || !rangeTo) return;
+
+    var total = totalAll();
+    rangeFrom.max = String(total || 1);
+    rangeTo.max = String(total || 1);
+
+    if (!autofill) return;
+
+    var b = rangeBounds();
+    if (isNaN(b.from) || b.from < 1 || b.from > total) rangeFrom.value = '1';
+    if (isNaN(b.to) || b.to < 1 || b.to > total) rangeTo.value = String(defaultRangeEnd() || 1);
   }
 
   function buildSheets(list) {
@@ -197,7 +286,6 @@
 
   function loadCodes() {
     var url = print.getAttribute('data-codes-url');
-    var source = print.getAttribute('data-source') || 'BRO';
 
     if (!url) return Promise.reject(new Error('URL daftar kode belum diatur.'));
 
@@ -214,18 +302,65 @@
   function update() {
     if (!ready) return;
 
-    var list = currentList();
-    var scopeLabel = scopeSel && scopeSel.value === 'all' ? 'Semua kode' : 'Batch terakhir';
-    sheets = buildSheets(list);
-
-    if (summaryEl) summaryEl.textContent = scopeLabel + ': ' + list.length + ' kode → ' + sheets.length + ' lembar';
-    showNote('');
-
     if (!codes.length) {
-      showError('Belum ada kode tersedia untuk kanal ini.');
-      startBtn.disabled = true;
+      sheets = [];
+      if (summaryEl) summaryEl.textContent = scopeLabel() + ': 0 kode';
+      showNote('');
+      showError(
+        downloaded > 0
+          ? 'Semua kode sudah pernah diunduh. Generate kode baru untuk melanjutkan.'
+          : 'Belum ada kode tersedia untuk kanal ini.'
+      );
+      if (startBtn) startBtn.disabled = true;
       return;
     }
+
+    var scope = currentScope();
+    var list;
+    var dilewati = 0;
+    var rangeTotal = 0;
+
+    if (scope === 'custom') {
+      var rangeErr = customError();
+      if (rangeErr) {
+        sheets = [];
+        if (summaryEl) summaryEl.textContent = 'Rentang custom belum valid.';
+        showNote('');
+        showError(rangeErr);
+        if (startBtn) startBtn.disabled = true;
+        return;
+      }
+
+      var sel = rangeSelection();
+      list = sel.list;
+      dilewati = sel.dilewati;
+      rangeTotal = sel.total;
+
+      if (!list.length) {
+        sheets = [];
+        if (summaryEl) summaryEl.textContent = scopeLabel() + ': 0 kode dari ' + numberFormat(rangeTotal) + ' dipilih';
+        showNote('');
+        showError(
+          rangeTotal
+            ? 'Semua kode pada rentang ini sudah diunduh.'
+            : 'Kode tidak cukup untuk satu lembar (butuh ' + slots.length + ' kode per lembar).'
+        );
+        if (startBtn) startBtn.disabled = true;
+        return;
+      }
+    } else {
+      list = scope === 'all' ? codes : latest;
+    }
+
+    var label = scopeLabel();
+    sheets = buildSheets(list);
+
+    if (summaryEl) {
+      summaryEl.textContent = label + ': ' + numberFormat(list.length) + ' kode' +
+        (dilewati ? ' (' + numberFormat(dilewati) + ' terunduh dilewati)' : '') +
+        ' → ' + numberFormat(sheets.length) + ' lembar';
+    }
+    showNote('');
 
     if (!list.length) {
       showError(
@@ -249,11 +384,16 @@
       return;
     }
 
+    var catatan = [];
     if (list.length % slots.length !== 0) {
-      showNote((list.length % slots.length) + ' kode tidak terpakai karena tidak penuh satu lembar.');
+      catatan.push((list.length % slots.length) + ' kode tidak terpakai karena tidak penuh satu lembar.');
     }
-
-    if (!img) showNote('Gambar template tidak dimuat, kode dicetak di atas latar polos.');
+    if (dilewati) {
+      catatan.push(numberFormat(dilewati) + ' kode pada rentang ini sudah terunduh dan dilewati.');
+    }
+    if (!img) catatan.push('Gambar template tidak dimuat, kode dicetak di atas latar polos.');
+    if (downloaded > 0) catatan.push(numberFormat(downloaded) + ' kode sudah pernah diunduh dan tidak disertakan.');
+    showNote(catatan.join(' '));
 
     showError('');
     if (startBtn) startBtn.disabled = false;
@@ -267,6 +407,8 @@
     img = null;
     codes = [];
     latest = [];
+    all = [];
+    downloaded = 0;
     sheets = [];
     if (startBtn) startBtn.disabled = true;
     if (summaryEl) summaryEl.textContent = 'Memuat data...';
@@ -278,7 +420,10 @@
         var data = results[1] || {};
         codes = data.codes || [];
         latest = data.latest || [];
+        all = data.all || [];
+        downloaded = parseInt(data.downloaded, 10) || 0;
         ready = true;
+        syncRangeUI(true);
         update();
       })
       .catch(function (err) {
@@ -305,6 +450,42 @@
     var pad = function (n) { return (n < 10 ? '0' : '') + n; };
     return '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) +
       pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+  }
+
+  // Tandai kode ke server agar tidak bisa diunduh lagi. Mengembalikan jumlah kode yang ditandai.
+  function markDownloaded(list) {
+    if (!markUrl || !list.length) return Promise.resolve(0);
+
+    var meta = document.querySelector('meta[name="csrf-token"]');
+
+    return fetch(markUrl, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': meta ? meta.getAttribute('content') : '',
+      },
+      body: JSON.stringify({ source: source, codes: list }),
+    }).then(function (res) {
+      if (!res.ok) throw new Error('Penandaan kode gagal (' + res.status + ').');
+      return res.json();
+    }).then(function (data) {
+      return (data && data.marked) || 0;
+    });
+  }
+
+  // Kode yang barusan ditandai server: keluar dari daftar cetak,
+  // tapi tetap bernomor di `all` dengan status terunduh (penomoran stabil).
+  function applyDownloaded(list) {
+    var gone = {};
+    list.forEach(function (kode) { gone[kode] = true; });
+
+    codes = codes.filter(function (kode) { return !gone[kode]; });
+    latest = latest.filter(function (kode) { return !gone[kode]; });
+    all.forEach(function (item) {
+      if (gone[item.code]) item.downloaded = true;
+    });
   }
 
   function run() {
@@ -334,7 +515,7 @@
 
     var step = function () {
       if (cancelled || index >= antrean.length) {
-        finish(files, cancelled);
+        finish(files, cancelled, null, antrean);
         return;
       }
 
@@ -360,7 +541,7 @@
     step();
   }
 
-  function finish(files, wasCancelled, error) {
+  function finish(files, wasCancelled, error, sheetList) {
     running = false;
     if (cancelBtn) cancelBtn.hidden = true;
     if (progressEl) progressEl.hidden = true;
@@ -392,8 +573,24 @@
     var zip = fflate.zipSync(files, { level: 6 });
     download(new Blob([zip], { type: 'application/zip' }), 'brosur-voucher-' + stamp() + '.zip');
 
-    if (summaryEl) summaryEl.textContent = jumlah + ' lembar berhasil diunduh sebagai ZIP.';
-    update();
+    var kode = [];
+    (sheetList || []).forEach(function (sheet) { kode = kode.concat(sheet); });
+
+    // ZIP sudah terunduh: tandai kode di server supaya tidak bisa diunduh lagi.
+    markDownloaded(kode)
+      .then(function (marked) {
+        downloaded += marked;
+        applyDownloaded(kode);
+        update();
+        if (summaryEl) {
+          summaryEl.textContent = jumlah + ' lembar (' + numberFormat(kode.length) +
+            ' kode) berhasil diunduh dan ditandai sudah terunduh.';
+        }
+      })
+      .catch(function () {
+        update();
+        showNote('ZIP berhasil diunduh, tetapi penandaan kode di server gagal. Muat ulang halaman sebelum mengunduh lagi agar kode tidak terunduh dua kali.');
+      });
   }
 
   if (startBtn) startBtn.addEventListener('click', run);
@@ -405,8 +602,18 @@
   }
 
   if (scopeSel) {
-    scopeSel.addEventListener('change', function () { if (!running) update(); });
+    scopeSel.addEventListener('change', function () {
+      if (running) return;
+      syncRangeUI(true);
+      update();
+    });
   }
+
+  [rangeFrom, rangeTo].forEach(function (el) {
+    if (!el) return;
+    el.addEventListener('input', function () { if (!running) update(); });
+    el.addEventListener('change', function () { if (!running) update(); });
+  });
 
   // muat ulang data tiap modal dibuka (baik lewat tombol maupun auto-open)
   if (typeof MutationObserver === 'function') {

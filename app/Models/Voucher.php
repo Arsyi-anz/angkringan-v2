@@ -25,11 +25,13 @@ class Voucher extends Model
         'kategori',
         'status',
         'used_at',
+        'downloaded_at',
         'id_admin',
     ];
 
     protected $casts = [
         'used_at' => 'datetime',
+        'downloaded_at' => 'datetime',
     ];
 
     protected function id(): Attribute
