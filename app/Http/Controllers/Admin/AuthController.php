@@ -24,8 +24,8 @@ class AuthController extends Controller
 
         if (! Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
             return back()
-                ->withInput($request->only('email'))
-                ->withErrors(['email' => 'Email atau password salah.']);
+                ->withInput($request->only('username'))
+                ->withErrors(['username' => 'Username atau password salah.']);
         }
 
         $request->session()->regenerate();
@@ -55,7 +55,7 @@ class AuthController extends Controller
         return [
             'id_admin' => $admin?->id_admin,
             'nama' => $admin?->nama,
-            'email' => $admin?->email,
+            'username' => $admin?->username,
         ];
     }
 }

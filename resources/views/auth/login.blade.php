@@ -22,8 +22,8 @@
             @csrf
 
             <div class="mb-3">
-                <label class="form-label small fw-semibold">Email</label>
-                <input type="email" name="email" class="form-control" placeholder="Masukkan email terdaftar" required autofocus>
+                <label class="form-label small fw-semibold">Username</label>
+                <input type="text" name="username" class="form-control" placeholder="Masukkan username terdaftar" required autofocus>
             </div>
 
             <div class="mb-3">
