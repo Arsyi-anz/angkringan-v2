@@ -17,7 +17,7 @@ class VoucherManagementTest extends TestCase
     {
         return Admin::create([
             'nama' => 'Admin Uji',
-            'email' => 'admin@example.test',
+            'username' => 'admin',
             'password' => 'rahasia123',
         ]);
     }
@@ -112,6 +112,203 @@ class VoucherManagementTest extends TestCase
             ->assertOk()
             ->assertSee('IG-AAA111', false)
             ->assertDontSee('BRO-BBB222', false);
+    }
+
+    public function test_vouchers_can_be_filtered_by_status(): void
+    {
+        $this->insertVoucher('BRO-USE001', 'BRO', '2026-01-04 09:00:00', 'USED');
+        $this->insertVoucher('BRO-USE002', 'BRO', '2026-01-04 09:00:00', 'USED');
+        $this->insertVoucher('BRO-AVA001', 'BRO', '2026-01-05 10:00:00');
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        // Periode keseluruhan agar tidak terbanting periode default "hari ini".
+        $this->get(route('admin.vouchers.index', ['status' => 'USED', 'periode' => 'semua']))
+            ->assertOk()
+            ->assertSee('BRO-USE001', false)
+            ->assertSee('BRO-USE002', false)
+            ->assertDontSee('BRO-AVA001', false);
+
+        $this->get(route('admin.vouchers.index', ['status' => 'AVAILABLE']))
+            ->assertOk()
+            ->assertSee('BRO-AVA001', false)
+            ->assertDontSee('BRO-USE001', false);
+    }
+
+    public function test_vouchers_can_be_filtered_by_brochure_discount(): void
+    {
+        // Urutan kode brosur menentukan slot lembar: 50/30/15 berulang.
+        $this->insertVoucher('BRO-D1XXXX', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('BRO-D2XXXX', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('BRO-D3XXXX', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('BRO-D4XXXX', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('BRO-D5XXXX', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('BRO-D6XXXX', 'BRO', '2026-01-05 10:00:00');
+        // Voucher digital tidak memiliki diskon.
+        $this->insertVoucher('IG-OTHER01', 'IG', '2026-01-06 10:00:00');
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        $this->get(route('admin.vouchers.index', ['diskon' => '50']))
+            ->assertOk()
+            ->assertSee('BRO-D1XXXX', false)
+            ->assertSee('BRO-D4XXXX', false)
+            ->assertDontSee('BRO-D2XXXX', false)
+            ->assertDontSee('BRO-D3XXXX', false)
+            ->assertDontSee('IG-OTHER01', false)
+            ->assertSee('Diskon 50%', false);
+
+        $this->get(route('admin.vouchers.index', ['diskon' => '30']))
+            ->assertOk()
+            ->assertSee('BRO-D2XXXX', false)
+            ->assertSee('BRO-D5XXXX', false)
+            ->assertDontSee('BRO-D1XXXX', false);
+
+        $this->get(route('admin.vouchers.index', ['diskon' => '15']))
+            ->assertOk()
+            ->assertSee('BRO-D3XXXX', false)
+            ->assertSee('BRO-D6XXXX', false)
+            ->assertDontSee('BRO-D1XXXX', false);
+
+        // Diskon hanya berlaku untuk brosur -> sumber digital menghasilkan daftar kosong.
+        $this->get(route('admin.vouchers.index', ['diskon' => '50', 'source' => 'IG']))
+            ->assertOk()
+            ->assertSee('Tidak ada kode', false);
+    }
+
+    public function test_penggunaan_brosur_stat_appears_only_for_used_status(): void
+    {
+        $this->insertVoucher('BRO-U1XXXX', 'BRO', '2026-01-05 10:00:00', 'USED');
+        $this->insertVoucher('BRO-U2XXXX', 'BRO', '2026-01-05 10:00:00', 'USED');
+        $this->insertVoucher('BRO-U3XXXX', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('IG-U1XXXX', 'IG', '2026-01-05 10:00:00', 'USED');
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        // Periode "semua" agar voucher lama ikut dihitung.
+        $this->get(route('admin.vouchers.index', ['status' => 'USED', 'periode' => 'semua']))
+            ->assertOk()
+            ->assertSee('Penggunaan voucher brosur:', false)
+            ->assertSee('<strong>2</strong>', false);
+
+        // Hanya angka brosur; voucher digital tidak dihitung.
+        $this->get(route('admin.vouchers.index'))
+            ->assertOk()
+            ->assertDontSee('Penggunaan voucher brosur:', false);
+
+        $this->get(route('admin.vouchers.index', ['status' => 'USED', 'source' => 'IG']))
+            ->assertOk()
+            ->assertDontSee('Penggunaan voucher brosur:', false);
+
+        // Mengikuti filter diskon aktif.
+        $this->get(route('admin.vouchers.index', ['status' => 'USED', 'periode' => 'semua', 'diskon' => '50']))
+            ->assertOk()
+            ->assertSee('Penggunaan voucher brosur:', false)
+            ->assertSee('<strong>1</strong>', false);
+    }
+
+    public function test_penggunaan_brosur_period_defaults_to_today(): void
+    {
+        $this->insertVoucher('BRO-TODAY1', 'BRO', now()->format('Y-m-d 09:00:00'), 'USED');
+        $this->insertVoucher('BRO-YEST01', 'BRO', now()->subDay()->format('Y-m-d 08:00:00'), 'USED');
+        $this->insertVoucher('BRO-AVA001', 'BRO', now()->format('Y-m-d 09:00:00'));
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        // Bawaan periode = hari ini: hanya voucher yang dipakai hari ini.
+        $this->get(route('admin.vouchers.index', ['status' => 'USED']))
+            ->assertOk()
+            ->assertSee('BRO-TODAY1', false)
+            ->assertDontSee('BRO-YEST01', false)
+            ->assertSee('Penggunaan voucher brosur:', false)
+            ->assertSee('<strong>1</strong>', false);
+
+        $this->get(route('admin.vouchers.index', ['status' => 'USED', 'periode' => 'semua']))
+            ->assertOk()
+            ->assertSee('BRO-TODAY1', false)
+            ->assertSee('BRO-YEST01', false)
+            ->assertSee('Penggunaan voucher brosur:', false)
+            ->assertSee('<strong>2</strong>', false);
+    }
+
+    public function test_penggunaan_brosur_period_custom_range_and_invalid_dates(): void
+    {
+        $sepuluh = now()->subDays(10)->format('Y-m-d');
+        $lima = now()->subDays(5)->format('Y-m-d');
+        $tiga = now()->subDays(3)->format('Y-m-d');
+        $this->insertVoucher('BRO-R1XXXX', 'BRO', $sepuluh.' 09:00:00', 'USED');
+        $this->insertVoucher('BRO-R2XXXX', 'BRO', $lima.' 09:00:00', 'USED');
+        $this->insertVoucher('BRO-R3XXXX', 'BRO', $tiga.' 09:00:00', 'USED');
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        // Rentang custom inklusif: hanya voucher 5 hari lalu yang masuk.
+        $this->get(route('admin.vouchers.index', [
+            'status' => 'USED',
+            'periode' => 'custom',
+            'dari' => now()->subDays(7)->format('Y-m-d'),
+            'sampai' => now()->subDays(4)->format('Y-m-d'),
+        ]))
+            ->assertOk()
+            ->assertSee('BRO-R2XXXX', false)
+            ->assertDontSee('BRO-R1XXXX', false)
+            ->assertDontSee('BRO-R3XXXX', false)
+            ->assertSee('<strong>1</strong>', false);
+
+        // Hanya batas mulai (3 hari lalu): voucher yang lebih lama (R1, R2) tidak masuk.
+        $this->get(route('admin.vouchers.index', [
+            'status' => 'USED',
+            'periode' => 'custom',
+            'dari' => $tiga,
+        ]))
+            ->assertOk()
+            ->assertSee('BRO-R3XXXX', false)
+            ->assertDontSee('BRO-R2XXXX', false)
+            ->assertDontSee('BRO-R1XXXX', false)
+            ->assertSee('<strong>1</strong>', false);
+
+        // Hanya batas akhir (5 hari lalu): R1 dan R2 masuk, yang lebih baru tidak.
+        $this->get(route('admin.vouchers.index', [
+            'status' => 'USED',
+            'periode' => 'custom',
+            'sampai' => $lima,
+        ]))
+            ->assertOk()
+            ->assertSee('BRO-R1XXXX', false)
+            ->assertSee('BRO-R2XXXX', false)
+            ->assertDontSee('BRO-R3XXXX', false)
+            ->assertSee('<strong>2</strong>', false);
+
+        // Tanggal tidak valid -> diabaikan (sama dengan keseluruhan).
+        $this->get(route('admin.vouchers.index', [
+            'status' => 'USED',
+            'periode' => 'custom',
+            'dari' => 'bukan-tanggal',
+            'sampai' => '20-99-2026',
+        ]))
+            ->assertOk()
+            ->assertSee('BRO-R1XXXX', false)
+            ->assertSee('BRO-R2XXXX', false)
+            ->assertSee('BRO-R3XXXX', false)
+            ->assertSee('<strong>3</strong>', false);
+    }
+
+    public function test_penggunaan_brosur_period_follows_export(): void
+    {
+        $this->insertVoucher('BRO-HARI01', 'BRO', now()->format('Y-m-d 09:00:00'), 'USED');
+        $this->insertVoucher('BRO-LAMA01', 'BRO', now()->subDay()->format('Y-m-d 08:00:00'), 'USED');
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        $hariIni = $this->get(route('admin.vouchers.export', ['status' => 'USED']))
+            ->assertOk()
+            ->assertDownload()
+            ->streamedContent();
+
+        $this->assertStringContainsString('BRO-HARI01', $hariIni);
+        $this->assertStringNotContainsString('BRO-LAMA01', $hariIni);
+
+        $semua = $this->get(route('admin.vouchers.export', ['status' => 'USED', 'periode' => 'semua']))
+            ->assertOk()
+            ->assertDownload()
+            ->streamedContent();
+
+        $this->assertStringContainsString('BRO-HARI01', $semua);
+        $this->assertStringContainsString('BRO-LAMA01', $semua);
     }
 
     public function test_generate_creates_unique_prefixed_codes(): void
@@ -212,9 +409,11 @@ class VoucherManagementTest extends TestCase
 
         $response->assertJsonCount(4, 'codes');
         $response->assertJsonCount(2, 'latest');
-        $response->assertJsonPath('codes.0', 'BRO-NEW002');
-        $response->assertJsonPath('latest.0', 'BRO-NEW002');
-        $response->assertJsonPath('latest.1', 'BRO-NEW001');
+        // Urutan terlama dulu agar slot lembar (50/30/15) konsisten.
+        $response->assertJsonPath('codes.0', 'BRO-OLD001');
+        $response->assertJsonPath('codes.3', 'BRO-NEW002');
+        $response->assertJsonPath('latest.0', 'BRO-NEW001');
+        $response->assertJsonPath('latest.1', 'BRO-NEW002');
         $response->assertJsonMissingPath('codes.5');
     }
 
@@ -276,8 +475,8 @@ class VoucherManagementTest extends TestCase
             ->assertOk()
             ->assertJson(['source' => 'BRO', 'total' => 2, 'downloaded' => 2])
             ->assertJsonCount(2, 'codes')
-            ->assertJsonPath('codes.0', 'BRO-NEW002')
-            ->assertJsonPath('codes.1', 'BRO-OLD002')
+            ->assertJsonPath('codes.0', 'BRO-OLD002')
+            ->assertJsonPath('codes.1', 'BRO-NEW002')
             ->assertJsonCount(1, 'latest')
             ->assertJsonPath('latest.0', 'BRO-NEW002');
     }
@@ -434,6 +633,38 @@ class VoucherManagementTest extends TestCase
 
         $this->assertStringContainsString('BRO-BBB222', $filtered);
         $this->assertStringNotContainsString('IG-AAA111', $filtered);
+    }
+
+    public function test_export_csv_follows_status_and_discount_filters(): void
+    {
+        $this->insertVoucher('BRO-USED50', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('BRO-USED30', 'BRO', '2026-01-05 10:00:00', 'USED');
+        $this->insertVoucher('BRO-FREE15', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('IG-OTHER01', 'IG', '2026-01-06 10:00:00');
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        $used = $this->get(route('admin.vouchers.export', ['status' => 'USED', 'periode' => 'semua']))
+            ->assertOk()
+            ->assertDownload()
+            ->streamedContent();
+
+        $this->assertStringContainsString('BRO-USED30', $used);
+        $this->assertStringNotContainsString('BRO-USED50', $used);
+        $this->assertStringNotContainsString('BRO-FREE15', $used);
+
+        $diskon50 = $this->get(route('admin.vouchers.export', ['diskon' => '50']))
+            ->assertOk()
+            ->assertDownload()
+            ->streamedContent();
+
+        $this->assertStringContainsString('BRO-USED50', $diskon50);
+        $this->assertStringNotContainsString('BRO-USED30', $diskon50);
+        $this->assertStringNotContainsString('BRO-FREE15', $diskon50);
+        $this->assertStringNotContainsString('IG-OTHER01', $diskon50);
+
+        $this->get(route('admin.vouchers.export.pdf', ['diskon' => '50', 'status' => 'USED']))
+            ->assertOk()
+            ->assertDownload();
     }
 
     public function test_export_pdf_follows_search_filters(): void

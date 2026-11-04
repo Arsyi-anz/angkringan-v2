@@ -15,7 +15,7 @@ class AdminLoginTest extends TestCase
     {
         return Admin::create([
             'nama' => 'Admin Uji',
-            'email' => 'admin@example.test',
+            'username' => 'admin',
             'password' => 'rahasia123',
         ]);
     }
@@ -42,7 +42,7 @@ class AdminLoginTest extends TestCase
         $admin = $this->makeAdmin();
 
         $this->post('/login', [
-            'email' => 'admin@example.test',
+            'username' => 'admin',
             'password' => 'rahasia123',
         ])->assertRedirect(route('admin.dashboard'));
 
@@ -54,9 +54,9 @@ class AdminLoginTest extends TestCase
         $this->makeAdmin();
 
         $this->from('/login')->post('/login', [
-            'email' => 'admin@example.test',
+            'username' => 'admin',
             'password' => 'salah',
-        ])->assertRedirect('/login')->assertSessionHasErrors('email');
+        ])->assertRedirect('/login')->assertSessionHasErrors('username');
 
         $this->assertGuest('admin');
     }

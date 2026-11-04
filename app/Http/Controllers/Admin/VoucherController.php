@@ -7,6 +7,7 @@ use App\Http\Requests\Voucher\CheckVoucherRequest;
 use App\Http\Requests\Voucher\GenerateVoucherRequest;
 use App\Models\Voucher;
 use App\Support\Brosur;
+use App\Support\DiskonBrosur;
 use App\Support\VoucherKuota;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -36,6 +38,8 @@ class VoucherController extends Controller
             'limits' => VoucherKuota::batas(),
             'vouchers' => $this->filter($request)->paginate(15)->withQueryString(),
             'voucherTemplate' => $this->voucherTemplateUrl(),
+            'diskonPilihan' => DiskonBrosur::PILIHAN,
+            'penggunaanBrosur' => $this->penggunaanBrosur($request),
         ]);
     }
 
@@ -67,11 +71,13 @@ class VoucherController extends Controller
     }
 
     /**
-     * Daftar kode untuk modal cetak brosur (dipakai oleh ang-vouchers.js).
-     * Batch terakhir = kode dengan waktu pembuatan terbaru.
-     * Kode yang sudah pernah diunduh (downloaded_at terisi) tidak disertakan
-     * pada codes/latest, tetapi tetap muncul pada all untuk penomoran rentang custom.
-     */
+      * Daftar kode untuk modal cetak brosur (dipakai oleh ang-vouchers.js).
+      * Batch terakhir = kode dengan waktu pembuatan terbaru.
+      * Kode yang sudah pernah diunduh (downloaded_at terisi) tidak disertakan
+      * pada codes/latest, tetapi tetap muncul pada all untuk penomoran rentang custom.
+      * Semua daftar diurutkan terlama dulu agar urutan slot lembar (50% / 30% / 15%)
+      * konsisten dengan penomoran "kode ke-N" di rentang custom.
+      */
     public function codes(Request $request): JsonResponse
     {
         $source = strtoupper(trim((string) $request->query('source', 'BRO')));
@@ -84,14 +90,14 @@ class VoucherController extends Controller
             ->where('kategori', $source)
             ->where('status', 'AVAILABLE')
             ->whereNull('downloaded_at')
-            ->orderByDesc('created_at')
-            ->orderByDesc('id_voucher')
+            ->orderBy('created_at')
+            ->orderBy('id_voucher')
             ->get(['kode_voucher', 'created_at']);
 
         $codes = $rows->pluck('kode_voucher')->values();
-        $terbaru = $rows->first();
-        $latest = $terbaru
-            ? $rows->where('created_at', $terbaru->created_at)->pluck('kode_voucher')->values()
+        $waktuTerbaru = $rows->max('created_at');
+        $latest = $waktuTerbaru
+            ? $rows->where('created_at', $waktuTerbaru)->pluck('kode_voucher')->values()
             : collect();
 
         // Seluruh kode kanal (termasuk yang sudah terunduh), paling lama dulu.
@@ -189,6 +195,9 @@ class VoucherController extends Controller
             'filters' => [
                 'q' => trim((string) $request->query('q')),
                 'source' => strtoupper(trim((string) $request->query('source'))),
+                'status' => strtoupper(trim((string) $request->query('status'))),
+                'diskon' => DiskonBrosur::PILIHAN[(string) $request->query('diskon')] ?? null,
+                'periode' => $this->labelPeriode($request),
             ],
         ])->setPaper('a4', 'landscape');
 
@@ -249,17 +258,138 @@ class VoucherController extends Controller
     {
         $query = Voucher::query()->orderByDesc('created_at')->orderByDesc('id_voucher');
 
+        $this->terapkanPencarian($query, $request);
+        $this->terapkanSumber($query, $request);
+        $this->terapkanStatus($query, $request);
+        $this->terapkanDiskon($query, $request);
+        $this->terapkanPeriode($query, $request);
+
+        return $query;
+    }
+
+    private function terapkanPencarian(Builder $query, Request $request): void
+    {
         $q = strtoupper(trim((string) $request->query('q')));
         if ($q !== '') {
             $query->where('kode_voucher', 'like', '%'.$q.'%');
         }
+    }
 
+    private function terapkanSumber(Builder $query, Request $request): void
+    {
         $source = strtoupper(trim((string) $request->query('source')));
         if (in_array($source, VoucherKuota::CHANNELS, true)) {
             $query->where('kategori', $source);
         }
+    }
 
-        return $query;
+    private function terapkanStatus(Builder $query, Request $request): void
+    {
+        $status = strtoupper(trim((string) $request->query('status')));
+        if (in_array($status, ['AVAILABLE', 'USED'], true)) {
+            $query->where('status', $status);
+        }
+    }
+
+    private function terapkanDiskon(Builder $query, Request $request): void
+    {
+        $slot = DiskonBrosur::slot($request->query('diskon'));
+
+        if ($slot !== null) {
+            // Diskon hanya dimiliki voucher brosur; sumber lain otomatis kosong.
+            $query->whereIn('id_voucher', DiskonBrosur::kodeSlot($slot));
+        }
+    }
+
+    /**
+     | Periode penggunaan: hanya aktif pada filter status USED.
+     | hari_ini (bawaan) = used_at hari ini, semua = tanpa batas,
+     | custom = rentang tanggal dari..sampai (inklusif, tanggal tidak valid diabaikan).
+     */
+    private function terapkanPeriode(Builder $query, Request $request): void
+    {
+        if (strtoupper(trim((string) $request->query('status'))) !== 'USED') {
+            return;
+        }
+
+        [$dari, $sampai] = $this->periodeUsed($request);
+
+        if ($dari !== null) {
+            $query->whereDate('used_at', '>=', $dari);
+        }
+
+        if ($sampai !== null) {
+            $query->whereDate('used_at', '<=', $sampai);
+        }
+    }
+
+    /**
+     | Batas tanggal penggunaan [dari, sampai]. Item boleh null (tanpa batas).
+     */
+    private function periodeUsed(Request $request): array
+    {
+        $periode = in_array($request->query('periode'), ['semua', 'custom'], true)
+            ? (string) $request->query('periode')
+            : 'hari_ini';
+
+        if ($periode === 'hari_ini') {
+            return [today(), today()];
+        }
+
+        if ($periode === 'custom') {
+            return [
+                $this->tanggalKueri($request->query('dari')),
+                $this->tanggalKueri($request->query('sampai')),
+            ];
+        }
+
+        return [null, null];
+    }
+
+    /**
+     | Tanggal dari query string; null bila tidak valid.
+     */
+    private function tanggalKueri(?string $nilai): ?Carbon
+    {
+        if ($nilai === null || $nilai === '' || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $nilai)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($nilai)->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     | Jumlah voucher brosur berstatus USED sesuai filter aktif
+     | (pencarian + diskon + periode penggunaan).
+     | Tampil hanya saat memfilter status USED, tanpa sumber atau dengan sumber Brosur.
+     */
+    private function penggunaanBrosur(Request $request): ?int
+    {
+        $status = strtoupper(trim((string) $request->query('status')));
+
+        if ($status !== 'USED') {
+            return null;
+        }
+
+        $sumber = strtoupper(trim((string) $request->query('source')));
+
+        if ($sumber !== '' && $sumber !== 'BRO') {
+            return null;
+        }
+
+        $query = Voucher::query()
+            ->where('kategori', 'BRO')
+            ->where('status', 'USED');
+
+        $this->terapkanPencarian($query, $request);
+        $this->terapkanDiskon($query, $request);
+        $this->terapkanPeriode($query, $request);
+
+        return $query->count();
     }
 
     private function kodeBaru(string $source): string
@@ -274,5 +404,36 @@ class VoucherController extends Controller
     private function voucherTemplateUrl(): string
     {
         return Brosur::url('brochure_voucher');
+    }
+
+    /**
+     | Deskripsi periode penggunaan untuk metadata PDF.
+     */
+    private function labelPeriode(Request $request): ?string
+    {
+        $status = strtoupper(trim((string) $request->query('status')));
+
+        if ($status !== 'USED') {
+            return null;
+        }
+
+        $periode = in_array($request->query('periode'), ['semua', 'custom'], true)
+            ? (string) $request->query('periode')
+            : 'hari_ini';
+
+        return match ($periode) {
+            'semua' => 'Digunakan: keseluruhan',
+            'custom' => (function () use ($request) {
+                [$dari, $sampai] = $this->periodeUsed($request);
+
+                if ($dari === null && $sampai === null) {
+                    return 'Digunakan: keseluruhan';
+                }
+
+                return 'Digunakan '.($dari?->format('d-m-Y') ?? '?')
+                    .' s/d '.($sampai?->format('d-m-Y') ?? '?');
+            })(),
+            default => 'Digunakan: hari ini',
+        };
     }
 }

@@ -20,6 +20,9 @@
         Dicetak: {{ now()->format('d-m-Y H:i') }}
         @if (! empty($filters['q'])) &middot; Pencarian: "{{ $filters['q'] }}" @endif
         @if (! empty($filters['source'])) &middot; Kanal: {{ $filters['source'] }} @endif
+        @if (! empty($filters['status'])) &middot; Status: {{ $filters['status'] === 'AVAILABLE' ? 'Belum digunakan' : 'USED' }} @endif
+        @if (! empty($filters['diskon'])) &middot; {{ $filters['diskon'] }} @endif
+        @if (! empty($filters['periode'])) &middot; {{ $filters['periode'] }} @endif
         &middot; Total: {{ $vouchers->count() }} voucher
     </div>
 

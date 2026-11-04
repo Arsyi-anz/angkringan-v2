@@ -16,7 +16,7 @@ class CustomerTest extends TestCase
     {
         return Admin::create([
             'nama' => 'Admin Uji',
-            'email' => 'admin@example.test',
+            'username' => 'admin',
             'password' => 'rahasia123',
         ]);
     }

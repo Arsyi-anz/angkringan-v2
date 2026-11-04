@@ -12,11 +12,13 @@
     /*
      | Variabel dari controller:
      | $channels : [['code'=>'IG','name'=>'Instagram','count'=>1], ['code'=>'FB',...], ['code'=>'TT',...], ['code'=>'BRO','name'=>'Brosur',...]]
-     | $limits   : ['brochure' => 2000, 'digital' => 50]  (digital = IG + FB + TT digabung)
+     | $limits   : ['brochure' => 6000, 'digital' => 50]  (digital = IG + FB + TT digabung)
      | $vouchers : paginator (code, source_code, source_label, created_at, used_at, is_used)
+     | $diskonPilihan : ['50' => 'Diskon 50%', '30' => 'Diskon 30%', '15' => 'Diskon 15%']
+     | $penggunaanBrosur : jumlah voucher brosur USED sesuai filter (null bila tidak muncul)
      | Route: admin.vouchers.generate (POST), admin.vouchers.codes (GET JSON), admin.vouchers.export (GET CSV), admin.vouchers.export.pdf (GET PDF), admin.vouchers.redeem (PATCH)
      */
-    $limits      = $limits ?? ['brochure' => 2000, 'digital' => 50];
+    $limits      = $limits ?? ['brochure' => 6000, 'digital' => 50];
     $channels    = $channels ?? [];
     $digitalUsed = collect($channels)->whereIn('code', ['IG', 'FB', 'TT'])->sum('count');
     $remainingBy = [];
@@ -109,7 +111,37 @@
                         <option value="{{ $c['code'] }}" @selected(request('source') === $c['code'])>{{ $c['name'] }}</option>
                     @endforeach
                 </select>
+                <select class="ang-input ang-select" name="status" aria-label="Filter status" data-auto-submit>
+                    <option value="">Semua status</option>
+                    <option value="AVAILABLE" @selected(request('status') === 'AVAILABLE')>Belum digunakan</option>
+                    <option value="USED" @selected(request('status') === 'USED')>USED</option>
+                </select>
+                <select class="ang-input ang-select" name="diskon" aria-label="Filter diskon brosur" data-auto-submit>
+                    <option value="">Semua diskon brosur</option>
+                    @foreach ($diskonPilihan ?? [] as $nilai => $label)
+                        <option value="{{ $nilai }}" @selected(request('diskon') === (string) $nilai)>{{ $label }}</option>
+                    @endforeach
+                </select>
                 <span class="ang-count">{{ $fmt(method_exists($vouchers, 'total') ? $vouchers->total() : count($vouchers ?? [])) }} kode</span>
+                @if ($penggunaanBrosur !== null)
+                    @php
+                        $periode = in_array(request('periode'), ['semua', 'custom'], true) ? request('periode') : 'hari_ini';
+                    @endphp
+                    <div class="ang-period-row">
+                        <span class="ang-count">Periode penggunaan:</span>
+                        <select class="ang-input ang-select" name="periode" aria-label="Periode penggunaan" data-auto-submit>
+                            <option value="hari_ini" @selected($periode === 'hari_ini')>Hari ini</option>
+                            <option value="semua" @selected($periode === 'semua')>Keseluruhan</option>
+                            <option value="custom" @selected($periode === 'custom')>Custom</option>
+                        </select>
+                        @if ($periode === 'custom')
+                            <input class="ang-input ang-date" type="date" name="dari" value="{{ request('dari') }}" aria-label="Digunakan mulai" data-auto-submit>
+                            <span class="ang-count">s/d</span>
+                            <input class="ang-input ang-date" type="date" name="sampai" value="{{ request('sampai') }}" aria-label="Digunakan sampai" data-auto-submit>
+                        @endif
+                        <span class="ang-count">Penggunaan voucher brosur: <strong>{{ $fmt($penggunaanBrosur) }}</strong></span>
+                    </div>
+                @endif
             </form>
 
             <div class="ang-table-wrap">
