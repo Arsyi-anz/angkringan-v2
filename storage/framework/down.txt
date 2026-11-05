@@ -1,0 +1,9 @@
+{
+    "except": [],
+    "redirect": null,
+    "retry": 300,
+    "refresh": 30,
+    "secret": "rahasia-angkringan",
+    "status": 503,
+    "template": null
+}
