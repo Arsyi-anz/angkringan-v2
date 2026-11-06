@@ -11,6 +11,17 @@
   var fWa = dlg.querySelector('#ang-f-wa');
   var fBirth = dlg.querySelector('#ang-f-birth');
   var fConsent = dlg.querySelector('input[name="setuju_pesan"][type="checkbox"]');
+  var fClearBirth = dlg.querySelector('[data-clear-birth]');
+
+  // Tombol hapus tanggal lahir hanya relevan saat mengedit; sembunyikan saat mode tambah.
+  if (fClearBirth) fClearBirth.hidden = true;
+
+  if (fClearBirth) {
+    fClearBirth.addEventListener('click', function () {
+      fBirth.value = '';
+      fBirth.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
 
   function setMethod(method) {
     var el = form.querySelector('input[name="_method"]');
@@ -45,6 +56,7 @@
       fName.value = opener.getAttribute('data-edit-nama') || '';
       fWa.value = opener.getAttribute('data-edit-wa') || '';
       fBirth.value = opener.getAttribute('data-edit-birth') || '';
+      if (fClearBirth) fClearBirth.hidden = false;
       if (fConsent) fConsent.checked = opener.getAttribute('data-edit-consent') === '1';
       title.textContent = 'Edit customer';
       submit.textContent = 'Simpan perubahan';
@@ -55,6 +67,7 @@
       fName.value = '';
       fWa.value = '';
       fBirth.value = '';
+      if (fClearBirth) fClearBirth.hidden = true;
       if (fConsent) fConsent.checked = false;
       title.textContent = 'Tambah customer';
       submit.textContent = 'Simpan customer';

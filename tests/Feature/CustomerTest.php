@@ -185,6 +185,7 @@ class CustomerTest extends TestCase
             ->assertSee('data-edit-nama="Andi"', false)
             ->assertSee('data-edit-birth="'.sprintf('%04d-%02d-%02d', 2000, 5, 1).'"', false)
             ->assertSee('id="ang-customer-form"', false)
-            ->assertSee('data-store-action="', false);
+            ->assertSee('data-store-action="', false)
+            ->assertSee('data-clear-birth', false);
     }
 }

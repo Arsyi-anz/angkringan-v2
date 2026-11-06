@@ -44,9 +44,12 @@
 
             <div class="ang-field">
                 <label class="ang-label" for="ang-f-birth">Tanggal lahir (opsional)</label>
-                <input class="ang-input @error('lahir_tgl') is-invalid @enderror @error('lahir_bln') is-invalid @enderror"
-                       id="ang-f-birth" name="birth_date"
-                       type="date" value="{{ old('birth_date') }}" max="{{ now()->toDateString() }}">
+                <div class="ang-birth-row">
+                    <input class="ang-input @error('lahir_tgl') is-invalid @enderror @error('lahir_bln') is-invalid @enderror"
+                           id="ang-f-birth" name="birth_date"
+                           type="date" value="{{ old('birth_date') }}" max="{{ now()->toDateString() }}">
+                    <button type="button" class="ang-btn ang-btn-sm" data-clear-birth hidden>Hapus tanggal lahir</button>
+                </div>
                 @error('lahir_tgl')<span class="ang-error">{{ $message }}</span>@enderror
                 @error('lahir_bln')<span class="ang-error">{{ $message }}</span>@enderror
                 @error('birth_date')<span class="ang-error">{{ $message }}</span>@enderror

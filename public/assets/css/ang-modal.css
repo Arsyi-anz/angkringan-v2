@@ -36,6 +36,9 @@
 .ang-input:focus{border-color:var(--ang-terra);background:#fff;outline:none;box-shadow:0 0 0 3px var(--ang-terra-soft)}
 .ang-input.is-invalid{border-color:#B3402A}
 .ang-error{display:block;margin-top:5px;color:#B3402A;font-size:12.5px}
+.ang-birth-row{display:flex;align-items:center;gap:8px}
+.ang-birth-row .ang-input{flex:1;min-width:0}
+.ang-birth-row .ang-btn{white-space:nowrap}
 
 .ang-check{display:flex;align-items:flex-start;gap:10px;font-weight:600;cursor:pointer}
 .ang-check input{width:18px;height:18px;margin-top:2px;accent-color:var(--ang-terra);flex:none}
