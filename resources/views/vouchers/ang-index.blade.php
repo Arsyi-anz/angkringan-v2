@@ -116,11 +116,17 @@
                     <option value="AVAILABLE" @selected(request('status') === 'AVAILABLE')>Belum digunakan</option>
                     <option value="USED" @selected(request('status') === 'USED')>USED</option>
                 </select>
-                <select class="ang-input ang-select" name="diskon" aria-label="Filter diskon brosur" data-auto-submit>
+                @php
+                    // Diskon brosur hanya relevan untuk sumber Brosur; sosmed nonaktifkan.
+                    $diskonDisabled = in_array(request('source'), ['IG', 'FB', 'TT'], true);
+                @endphp
+                <select class="ang-input ang-select" name="diskon" aria-label="Filter diskon brosur" data-auto-submit @disabled($diskonDisabled)>
                     <option value="">Semua diskon brosur</option>
-                    @foreach ($diskonPilihan ?? [] as $nilai => $label)
-                        <option value="{{ $nilai }}" @selected(request('diskon') === (string) $nilai)>{{ $label }}</option>
-                    @endforeach
+                    @if (! $diskonDisabled)
+                        @foreach ($diskonPilihan ?? [] as $nilai => $label)
+                            <option value="{{ $nilai }}" @selected(request('diskon') === (string) $nilai)>{{ $label }}</option>
+                        @endforeach
+                    @endif
                 </select>
                 <span class="ang-count">{{ $fmt(method_exists($vouchers, 'total') ? $vouchers->total() : count($vouchers ?? [])) }} kode</span>
                 @if ($penggunaanBrosur !== null)

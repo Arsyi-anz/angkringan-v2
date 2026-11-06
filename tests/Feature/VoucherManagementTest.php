@@ -174,6 +174,29 @@ class VoucherManagementTest extends TestCase
             ->assertSee('Tidak ada kode', false);
     }
 
+    public function test_diskon_dropdown_is_disabled_for_social_sources(): void
+    {
+        $this->insertVoucher('BRO-VIS01', 'BRO', '2026-01-05 10:00:00');
+        $this->insertVoucher('IG-VIS01', 'IG', '2026-01-05 10:00:00');
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        // Sumber sosmed: dropdown diskon nonaktif.
+        foreach (['IG', 'FB', 'TT'] as $sumber) {
+            $html = $this->get(route('admin.vouchers.index', ['source' => $sumber]))
+                ->assertOk()
+                ->getContent();
+
+            $this->assertMatchesRegularExpression('/name="diskon"[^>]*disabled>/', $html);
+        }
+
+        // Tanpa sumber atau sumber Brosur: dropdown aktif kembali.
+        $html = $this->get(route('admin.vouchers.index'))->assertOk()->getContent();
+        $this->assertDoesNotMatchRegularExpression('/name="diskon"[^>]*disabled>/', $html);
+
+        $html = $this->get(route('admin.vouchers.index', ['source' => 'BRO']))->assertOk()->getContent();
+        $this->assertDoesNotMatchRegularExpression('/name="diskon"[^>]*disabled>/', $html);
+    }
+
     public function test_penggunaan_brosur_stat_appears_only_for_used_status(): void
     {
         $this->insertVoucher('BRO-U1XXXX', 'BRO', '2026-01-05 10:00:00', 'USED');
