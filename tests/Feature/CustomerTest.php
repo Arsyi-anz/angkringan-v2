@@ -188,4 +188,27 @@ class CustomerTest extends TestCase
             ->assertSee('data-store-action="', false)
             ->assertSee('data-clear-birth', false);
     }
+
+    public function test_customer_list_is_paginated_15_per_page(): void
+    {
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        foreach (range(1, 16) as $i) {
+            Customer::create([
+                'nama' => 'Member N'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+                'no_wa' => '6281'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+            ]);
+        }
+
+        $this->get('/admin/customers')
+            ->assertOk()
+            ->assertSee('data-edit-nama="Member N01"', false)
+            ->assertDontSee('data-edit-nama="Member N16"', false)
+            ->assertSee('Halaman 1 dari 2', false);
+
+        $this->get('/admin/customers?page=2')
+            ->assertOk()
+            ->assertSee('data-edit-nama="Member N16"', false)
+            ->assertDontSee('data-edit-nama="Member N15"', false);
+    }
 }

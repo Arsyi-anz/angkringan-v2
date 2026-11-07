@@ -58,7 +58,7 @@ class VisitTest extends TestCase
             ->assertSee('data-ang-modal="ang-visit-modal"', false)
             ->assertSee('id="ang-visit-modal"', false)
             ->assertViewHas('customers', function ($customers) {
-                $row = $customers->firstWhere('nama', 'Budi');
+                $row = $customers->getCollection()->firstWhere('nama', 'Budi');
 
                 return $row !== null
                     && (int) $row->visits_count === 1
@@ -251,8 +251,8 @@ class VisitTest extends TestCase
             ->assertSee('Dalam 30 hari')
             ->assertViewHas('windowDays', 30)
             ->assertViewHas('customers', function ($customers) {
-                $citra = $customers->firstWhere('nama', 'Citra');
-                $dodi = $customers->firstWhere('nama', 'Dodi');
+                $citra = $customers->getCollection()->firstWhere('nama', 'Citra');
+                $dodi = $customers->getCollection()->firstWhere('nama', 'Dodi');
 
                 // Citra: kunjungan masih dalam [ulang tahun - 30, ulang tahun] -> 1.
                 // Dodi: jendela [ulang tahun-30 .. hari ini] belum dimulai (ulang tahun 50 hari lagi) -> 0.
@@ -262,5 +262,30 @@ class VisitTest extends TestCase
                     && (int) $dodi->visits_window_count === 0
                     && (int) $dodi->visits_count === 1;
             });
+    }
+
+    public function test_visit_list_is_paginated_15_per_page(): void
+    {
+        $admin = $this->makeAdmin();
+        $this->actingAs($admin, 'admin');
+
+        foreach (range(1, 16) as $i) {
+            Customer::create([
+                'nama' => 'Member A'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+                'no_wa' => '6281'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+            ]);
+        }
+
+        $this->get('/admin/visits')
+            ->assertOk()
+            ->assertSee('16 customer', false)
+            ->assertSee('Halaman 1 dari 2', false)
+            ->assertSee('<span class="ang-person-name">Member A01</span>', false)
+            ->assertDontSee('<span class="ang-person-name">Member A16</span>', false);
+
+        $this->get('/admin/visits?page=2')
+            ->assertOk()
+            ->assertSee('<span class="ang-person-name">Member A16</span>', false)
+            ->assertDontSee('<span class="ang-person-name">Member A01</span>', false);
     }
 }

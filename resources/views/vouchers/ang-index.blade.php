@@ -101,7 +101,7 @@
             </div>
 
             <form method="GET" class="ang-toolbar">
-                <div class="ang-search">
+                <div class="ang-search ang-search-code">
                     <svg class="ang-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg>
                     <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari kode voucher" aria-label="Cari kode voucher">
                 </div>

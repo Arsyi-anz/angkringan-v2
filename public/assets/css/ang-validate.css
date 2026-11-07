@@ -5,7 +5,7 @@
 .ang-panel-head-row .ang-tag{margin-top:2px}
 .ang-tag{display:inline-block;padding:3px 10px;border-radius:999px;background:var(--ang-terra-soft);color:var(--ang-terra-dark);font-size:12px;font-weight:700;white-space:nowrap}
 
-.ang-code-input{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.ang-code-input{font-family:"DejaVu Sans Mono",Consolas,ui-monospace,Menlo,monospace;font-variant-numeric:slashed-zero;font-size:15px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
 .ang-code-input::placeholder{font-weight:500;letter-spacing:0;text-transform:none;font-family:inherit}
 .ang-btn-block{width:100%;justify-content:center}
 .ang-form-aside{margin:14px 0 0;color:var(--ang-muted);font-size:12.5px}
@@ -28,7 +28,8 @@
 .ang-step-sub{display:block;color:var(--ang-muted);font-size:12.5px}
 
 /* tabel voucher */
-.ang-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:800;letter-spacing:.4px;color:var(--ang-brown)}
+/* DejaVu Sans Mono: angka nol bergaris tengah (slashed zero), beda jelas dengan huruf O. */
+.ang-mono{font-family:"DejaVu Sans Mono",Consolas,ui-monospace,Menlo,monospace;font-variant-numeric:slashed-zero;font-weight:700;letter-spacing:.4px;color:var(--ang-brown)}
 .ang-badge-used{background:#EDE6DF;color:#6D5848}
 .ang-table-wrap .ang-table.is-narrow{min-width:560px}
 

@@ -36,26 +36,26 @@
             <div class="ang-flash" role="status">{{ session('status') }}</div>
         @endif
 
-        {{-- Catatan: kalau $customers memakai paginate(), hitung statistik di controller. --}}
+        {{-- Statistik dihitung dari seluruh data di controller; daftar di layar 15/halaman. --}}
         <section class="ang-stats" aria-label="Ringkasan">
             <div class="ang-stat">
                 <span class="ang-stat-label">Total member</span>
-                <span class="ang-stat-value">{{ $customers->count() }}</span>
+                <span class="ang-stat-value">{{ $statTotal }}</span>
                 <span class="ang-stat-note">Semua data tersimpan</span>
             </div>
             <div class="ang-stat">
                 <span class="ang-stat-label">Tanggal lahir terisi</span>
-                <span class="ang-stat-value">{{ $customers->whereNotNull('birth_date')->count() }}</span>
+                <span class="ang-stat-value">{{ $statBirth }}</span>
                 <span class="ang-stat-note">Untuk ucapan ulang tahun</span>
             </div>
             <div class="ang-stat">
                 <span class="ang-stat-label">Persetujuan WA</span>
-                <span class="ang-stat-value">{{ $customers->where('wa_consent', true)->count() }}</span>
+                <span class="ang-stat-value">{{ $statConsent }}</span>
                 <span class="ang-stat-note">Setuju menerima pesan</span>
             </div>
             <div class="ang-stat is-key">
                 <span class="ang-stat-label">Total kunjungan</span>
-                <span class="ang-stat-value">{{ $customers->sum('visits_count') }}</span>
+                <span class="ang-stat-value">{{ $statVisits }}</span>
                 <span class="ang-stat-note">Kunjungan dine-in tercatat</span>
             </div>
         </section>
@@ -132,6 +132,8 @@
                     </tbody>
                 </table>
             </div>
+
+            @include('partials.ang-pager', ['pages' => $customers])
         </section>
     </main>
 

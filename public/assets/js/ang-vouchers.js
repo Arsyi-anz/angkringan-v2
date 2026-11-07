@@ -244,7 +244,7 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(x, y, w, h);
       ctx.fillStyle = '#111111';
-      ctx.font = '700 ' + Math.max(10, Math.round(h * 0.62)) + 'px "Plus Jakarta Sans", Arial, sans-serif';
+      ctx.font = '700 ' + Math.max(10, Math.round(h * 0.62)) + 'px "DejaVu Sans Mono", ui-monospace, Consolas, monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(code, x + w / 2, y + h / 2, w * 0.94);
@@ -281,6 +281,14 @@
       image.onload = function () { img = image; resolve(true); };
       image.onerror = function () { img = null; resolve(false); };
       image.src = templateUrl;
+    });
+  }
+
+  // Pastikan font mono slashed-zero sudah siap sebelum kode digambar ke lembar.
+  function loadFont() {
+    if (!document.fonts || !document.fonts.load) return Promise.resolve();
+    return document.fonts.load('700 20px "DejaVu Sans Mono"').catch(function () {
+      return undefined;
     });
   }
 
@@ -415,7 +423,7 @@
     showError('');
     showNote('');
 
-    Promise.all([loadTemplate(), loadCodes()])
+    Promise.all([loadTemplate(), loadCodes(), loadFont()])
       .then(function (results) {
         var data = results[1] || {};
         codes = data.codes || [];

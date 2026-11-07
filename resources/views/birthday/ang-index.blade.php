@@ -17,6 +17,7 @@
      |            status_pesan (TERKIRIM | GAGAL | null untuk tahun berjalan),
      |            hampers_tahun (model Hampers | null untuk tahun berjalan),
      |            hampers_batas (Carbon batas klaim | null bila tanggal lahir tidak valid)
+     |            (paginator 15/halaman; pencarian nama/no. WA lewat query q)
      */
     $minVisits  = $minVisits ?? 5;
     $windowDays = $windowDays ?? 90;
@@ -71,6 +72,14 @@
                 </div>
                 <button type="button" class="ang-btn ang-btn-sm" data-ang-modal="ang-message-modal">Pratinjau pesan</button>
             </div>
+
+            <form method="GET" class="ang-toolbar">
+                <div class="ang-search">
+                    <svg class="ang-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg>
+                    <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari nama / no. WhatsApp" aria-label="Cari member">
+                </div>
+                <span class="ang-count">{{ $members->total() }} member</span>
+            </form>
 
             <div class="ang-table-wrap">
                 <table class="ang-table">
@@ -128,11 +137,14 @@
                                         <span class="ang-badge ang-badge-ok">Sudah KLAIM</span>
                                     @elseif ($lewatBatas)
                                         <span class="ang-badge ang-badge-no">Kadaluwarsa</span>
-                                    @elseif ($m->visits_window_count >= $minVisits)
+                                    @elseif ($hampersTahun)
+                                        {{-- Klaim hanya setelah pesan ulang tahun terkirim (record hampers dibuat otomatis). --}}
                                         <button type="button" class="ang-btn ang-btn-sm"
                                                 data-ang-modal="ang-claim-modal"
                                                 data-claim-action="{{ Route::has('admin.hampers.claim') ? route('admin.hampers.claim', $m) : '#' }}"
                                                 data-claim-name="{{ $m->name }}">KLAIM</button>
+                                    @elseif ($m->visits_window_count >= $minVisits)
+                                        <span class="ang-badge ang-badge-off">Menunggu Kirim</span>
                                     @else
                                         <span class="ang-badge ang-badge-off">Ucapan saja</span>
                                     @endif
@@ -142,8 +154,13 @@
                             <tr>
                                 <td colspan="5">
                                     <div class="ang-empty">
-                                        <strong>Belum ada member dengan tanggal lahir</strong>
-                                        Isi tanggal lahir di Data Customer agar masuk daftar evaluasi.
+                                        @if (trim((string) request('q')) !== '')
+                                            <strong>Tidak ada member cocok dengan pencarian</strong>
+                                            Coba kata kunci lain atau kosongkan pencarian.
+                                        @else
+                                            <strong>Belum ada member dengan tanggal lahir</strong>
+                                            Isi tanggal lahir di Data Customer agar masuk daftar evaluasi.
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -151,6 +168,8 @@
                     </tbody>
                 </table>
             </div>
+
+            @include('partials.ang-pager', ['pages' => $members])
         </section>
 
         <p class="ang-fineprint"><strong>Penting:</strong> penentuan kuota final mengikuti aturan prioritas: belum pernah menerima hampers, kunjungan dine-in terbanyak, lalu paling dulu memenuhi syarat.</p>

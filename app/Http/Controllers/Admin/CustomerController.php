@@ -8,6 +8,7 @@ use App\Http\Requests\Customer\StoreCustomerRequest;
 use App\Http\Requests\Customer\UpdateCustomerRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
+use App\Models\Kunjungan;
 use App\Services\CustomerService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Contracts\View\View;
@@ -21,10 +22,27 @@ class CustomerController extends Controller
 
     public function index(SearchCustomerRequest $request): View
     {
-        $customers = $this->customers->all($request->filters());
+        $customers = $this->customers->paginate($request->filters());
+
+        // Statistik dihitung dari seluruh data; daftar di layar sudah dibagi halaman.
+        $statTotal = Customer::query()->count();
+        $statBirth = Customer::query()
+            ->whereNotNull('lahir_tgl')
+            ->whereNotNull('lahir_bln')
+            ->count();
+        $statConsent = Customer::query()->where('setuju_pesan', true)->count();
+        $statVisits = Kunjungan::query()->count();
+
         $customerOptions = Customer::query()->orderBy('nama')->get();
 
-        return view('customers.ang-index', compact('customers', 'customerOptions'));
+        return view('customers.ang-index', compact(
+            'customers',
+            'customerOptions',
+            'statTotal',
+            'statBirth',
+            'statConsent',
+            'statVisits',
+        ));
     }
 
     public function store(StoreCustomerRequest $request): RedirectResponse

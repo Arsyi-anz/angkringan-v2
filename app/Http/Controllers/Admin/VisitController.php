@@ -38,7 +38,8 @@ class VisitController extends Controller
             ->when(! in_array($sort, ['visits_asc', 'visits_desc'], true), function ($query) {
                 $query->orderByDesc('last_visit_at')->orderBy('nama');
             })
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
         // Isi visits_window_count: kunjungan window_days hari sebelum ulang tahun masing-masing.
         app(EvaluasiHampers::class)->tandai($customers, $windowDays);

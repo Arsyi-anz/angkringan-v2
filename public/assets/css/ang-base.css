@@ -1,5 +1,20 @@
 /* ang-base.css : token warna, reset ter-scope, layout shell.
    Semua selector diawali .ang- supaya tidak bentrok dengan CSS lain. */
+/* DejaVu Sans Mono (di-host lokal): angka nol bergaris tengah, beda jelas dengan huruf O. */
+@font-face{
+  font-family:"DejaVu Sans Mono";
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+  src:url("../fonts/DejaVuSansMono.ttf") format("truetype");
+}
+@font-face{
+  font-family:"DejaVu Sans Mono";
+  font-weight:700;
+  font-style:normal;
+  font-display:swap;
+  src:url("../fonts/DejaVuSansMono-Bold.ttf") format("truetype");
+}
 .ang-app{
   --ang-brown-950:#2E1810;
   --ang-brown:#4A2A1A;
