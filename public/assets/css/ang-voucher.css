@@ -21,11 +21,7 @@
 .ang-select:disabled{opacity:.55;cursor:not-allowed;background:var(--ang-paper)}
 /* Pencarian kode voucher memakai font mono slashed-zero agar 0 vs O jelas. */
 .ang-search-code input{font-family:"DejaVu Sans Mono",Consolas,ui-monospace,Menlo,monospace;font-variant-numeric:slashed-zero;text-transform:uppercase}
-.ang-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-top:1px solid var(--ang-line);color:var(--ang-muted);font-size:13px}
-.ang-pager-nav{display:flex;gap:8px}
-.ang-link-off{opacity:.45;pointer-events:none}
 .ang-nowrap{white-space:nowrap}
-
 .ang-gen-source{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:12px 14px;border-radius:10px;background:var(--ang-paper);border:1px solid var(--ang-line)}
 .ang-gen-source strong{color:var(--ang-brown)}
 

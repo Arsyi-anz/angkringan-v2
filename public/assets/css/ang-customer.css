@@ -60,6 +60,11 @@
 .ang-count{color:var(--ang-muted);font-size:13px}
 .ang-toolbar .ang-btn{margin-left:auto}
 
+/* Pager halaman (dipakai Data Customer, Kunjungan, Birthday, dan Manajemen Voucher). */
+.ang-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-top:1px solid var(--ang-line);color:var(--ang-muted);font-size:13px}
+.ang-pager-nav{display:flex;gap:8px}
+.ang-link-off{opacity:.45;pointer-events:none}
+
 .ang-table-wrap{overflow-x:auto}
 .ang-table{width:100%;border-collapse:collapse;min-width:680px}
 .ang-table th{
