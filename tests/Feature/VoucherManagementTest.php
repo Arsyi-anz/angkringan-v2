@@ -705,4 +705,22 @@ class VoucherManagementTest extends TestCase
             ->assertOk()
             ->assertDownload();
     }
+
+    public function test_export_pdf_splits_large_list_into_chunks_and_merges(): void
+    {
+        // Melebihi ambang chunk (400) supaya jalur render bertahap + merge FPDI aktif.
+        foreach (range(1, 401) as $i) {
+            $this->insertVoucher('IG-CHK'.str_pad((string) $i, 2, '0', STR_PAD_LEFT), 'IG', '2026-01-05 10:00:00');
+        }
+        $this->actingAs($this->makeAdmin(), 'admin');
+
+        $response = $this->get(route('admin.vouchers.export.pdf'))
+            ->assertOk()
+            ->assertDownload();
+
+        $bytes = $response->getContent();
+
+        $this->assertMatchesRegularExpression('/^%PDF/', $bytes ?? '');
+        $this->assertStringContainsString('%%EOF', $bytes ?? '');
+    }
 }

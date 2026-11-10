@@ -109,6 +109,10 @@ class CustomerController extends Controller
 
     public function exportPdf(SearchCustomerRequest $request)
     {
+        // Ekspor memakai seluruh data customer (tanpa pagination); beri waktu & memori longgar.
+        @set_time_limit(600);
+        @ini_set('memory_limit', '512M');
+
         $customers = $this->customers->all($request->filters());
 
         $pdf = Pdf::loadView('pdf.customers', [

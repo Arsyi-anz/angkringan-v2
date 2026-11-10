@@ -16,7 +16,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\PdfParser\StreamReader;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VoucherController extends Controller
@@ -188,20 +191,80 @@ class VoucherController extends Controller
 
     public function exportPdf(Request $request)
     {
+        // Daftar penuh bisa ribuan baris: DomPDF kehabisan memori/time limit saat
+        // dirender sekali jalan. Render bertahap per-chunk, lalu gabungkan dengan FPDI.
+        @set_time_limit(600);
+        @ini_set('memory_limit', '512M');
+
         $vouchers = $this->filter($request)->get();
 
-        $pdf = Pdf::loadView('pdf.vouchers', [
-            'vouchers' => $vouchers,
-            'filters' => [
-                'q' => trim((string) $request->query('q')),
-                'source' => strtoupper(trim((string) $request->query('source'))),
-                'status' => strtoupper(trim((string) $request->query('status'))),
-                'diskon' => DiskonBrosur::PILIHAN[(string) $request->query('diskon')] ?? null,
-                'periode' => $this->labelPeriode($request),
-            ],
-        ])->setPaper('a4', 'landscape');
+        $filters = [
+            'q' => trim((string) $request->query('q')),
+            'source' => strtoupper(trim((string) $request->query('source'))),
+            'status' => strtoupper(trim((string) $request->query('status'))),
+            'diskon' => DiskonBrosur::PILIHAN[(string) $request->query('diskon')] ?? null,
+            'periode' => $this->labelPeriode($request),
+        ];
 
-        return $pdf->download('voucher-'.now()->format('Ymd-His').'.pdf');
+        $bytes = $this->renderChunkedPdf($vouchers,
+            function (Collection $chunk, int $offset, ?int $meta) use ($filters) {
+                return Pdf::loadView('pdf.vouchers', [
+                    'vouchers' => $chunk,
+                    'filters' => $filters,
+                    'offset' => $offset,
+                    'meta' => $meta,
+                ])->setPaper('a4', 'landscape');
+            },
+        );
+
+        return response($bytes, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="voucher-'.now()->format('Ymd-His').'.pdf"',
+        ]);
+    }
+
+    /**
+     * Render koleksi besar per-chunk (DomPDF rapuh memori pada dokumen berribuan
+     * baris) lalu gabungkan hasil tiap chunk menjadi satu berkas PDF.
+     *
+     * @param  \Illuminate\Support\Collection<int, mixed>  $items
+     * @param  callable(\Illuminate\Support\Collection<int, mixed>, int, int|null): \Barryvdh\DomPDF\PDF  $render
+     * @param  int  $perPage  jumlah baris tiap chunk render
+     */
+    private function renderChunkedPdf($items, callable $render, int $perPage = 400): string
+    {
+        $total = $items->count();
+
+        if ($total <= $perPage) {
+            /** @var \Barryvdh\DomPDF\PDF $pdf */
+            $pdf = $render($items, 0, $total);
+
+            return $pdf->output();
+        }
+
+        $merger = new Fpdi('P', 'pt', 'A4');
+        $offset = 0;
+
+        foreach ($items->chunk($perPage) as $index => $chunk) {
+            /** @var \Barryvdh\DomPDF\PDF $pdf */
+            $pdf = $render($chunk, $offset, $index === 0 ? $total : null);
+            $bytes = $pdf->output();
+            unset($pdf);
+
+            $pageCount = $merger->setSourceFile(StreamReader::createByString($bytes));
+            for ($page = 1; $page <= $pageCount; $page++) {
+                $template = $merger->importPage($page);
+                $size = $merger->getTemplateSize($template);
+                $merger->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $merger->useTemplate($template, 0, 0, $size['width'], $size['height']);
+            }
+
+            $offset += $chunk->count();
+            gc_collect_cycles();
+        }
+
+        // FPDF::output() tanpa absen meng-echo dokumen; 'S' meminta string.
+        return $merger->output('S');
     }
 
     public function validatePage(): View

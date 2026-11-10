@@ -15,16 +15,18 @@
     </style>
 </head>
 <body>
-    <h1>Data Voucher Angkringan</h1>
-    <div class="meta">
-        Dicetak: {{ now()->format('d-m-Y H:i') }}
-        @if (! empty($filters['q'])) &middot; Pencarian: "{{ $filters['q'] }}" @endif
-        @if (! empty($filters['source'])) &middot; Kanal: {{ $filters['source'] }} @endif
-        @if (! empty($filters['status'])) &middot; Status: {{ $filters['status'] === 'AVAILABLE' ? 'Belum digunakan' : 'USED' }} @endif
-        @if (! empty($filters['diskon'])) &middot; {{ $filters['diskon'] }} @endif
-        @if (! empty($filters['periode'])) &middot; {{ $filters['periode'] }} @endif
-        &middot; Total: {{ $vouchers->count() }} voucher
-    </div>
+    @if (! empty($meta))
+        <h1>Data Voucher Angkringan</h1>
+        <div class="meta">
+            Dicetak: {{ now()->format('d-m-Y H:i') }}
+            @if (! empty($filters['q'])) &middot; Pencarian: "{{ $filters['q'] }}" @endif
+            @if (! empty($filters['source'])) &middot; Kanal: {{ $filters['source'] }} @endif
+            @if (! empty($filters['status'])) &middot; Status: {{ $filters['status'] === 'AVAILABLE' ? 'Belum digunakan' : 'USED' }} @endif
+            @if (! empty($filters['diskon'])) &middot; {{ $filters['diskon'] }} @endif
+            @if (! empty($filters['periode'])) &middot; {{ $filters['periode'] }} @endif
+            &middot; Total: {{ $meta }} voucher
+        </div>
+    @endif
 
     <table>
         <thead>
@@ -40,7 +42,7 @@
         <tbody>
             @forelse ($vouchers as $i => $voucher)
                 <tr>
-                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $offset + $i + 1 }}</td>
                     <td>{{ $voucher->kode_voucher }}</td>
                     <td>{{ $voucher->source_label }}</td>
                     <td>{{ $voucher->is_used ? 'USED' : 'AVAILABLE' }}</td>
@@ -48,9 +50,11 @@
                     <td>{{ $voucher->used_at ?? '-' }}</td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="6" style="text-align: center;">Tidak ada data.</td>
-                </tr>
+                @unless (! empty($meta))
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Tidak ada data.</td>
+                    </tr>
+                @endunless
             @endforelse
         </tbody>
     </table>
