@@ -6,6 +6,7 @@ use App\Models\Admin;
 use App\Models\Customer;
 use App\Models\Kunjungan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CustomerTest extends TestCase
@@ -79,6 +80,37 @@ class CustomerTest extends TestCase
         $this->get('/admin/customers')
             ->assertOk()
             ->assertViewHas('customers', fn ($customers) => (int) $customers->sum('visits_count') === 2);
+    }
+
+    public function test_orphan_kunjungan_rows_are_not_counted_in_total_visits(): void
+    {
+        $admin = $this->makeAdmin();
+        $customer = Customer::create(['nama' => 'F', 'no_wa' => '628666666666']);
+
+        Kunjungan::create([
+            'id_customer' => $customer->id_customer,
+            'tgl_kunjungan' => '2026-03-01',
+            'id_admin' => $admin->id_admin,
+        ]);
+
+        // Simulasikan sisa data impor lama: kunjungan tanpa customer (FK dimatikan sementara).
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+
+        try {
+            DB::table('kunjungan')->insert([
+                'id_customer' => 999999,
+                'tgl_kunjungan' => '2026-03-02',
+                'id_admin' => $admin->id_admin,
+            ]);
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
+
+        $this->actingAs($admin, 'admin');
+
+        $this->get('/admin/customers')
+            ->assertOk()
+            ->assertViewHas('statVisits', 1);
     }
 
     public function test_customer_can_be_searched_by_name_and_birth_month(): void

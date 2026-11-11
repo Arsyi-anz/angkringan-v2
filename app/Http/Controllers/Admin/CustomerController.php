@@ -31,7 +31,9 @@ class CustomerController extends Controller
             ->whereNotNull('lahir_bln')
             ->count();
         $statConsent = Customer::query()->where('setuju_pesan', true)->count();
-        $statVisits = Kunjungan::query()->count();
+        // Hanya kunjungan milik customer yang masih ada, supaya angka kartu selalu
+        // sama dengan jumlah kolom "Kunjungan" (data impor lama bisa menyisakan baris yatim).
+        $statVisits = Kunjungan::query()->whereHas('customer')->count();
 
         $customerOptions = Customer::query()->orderBy('nama')->get();
 
