@@ -204,7 +204,9 @@ class CustomerTest extends TestCase
             ->assertOk()
             ->assertSee('data-edit-nama="Member N01"', false)
             ->assertDontSee('data-edit-nama="Member N16"', false)
-            ->assertSee('Halaman 1 dari 2', false);
+            ->assertSee('Halaman 1 dari 2', false)
+            // Badge jumlah memakai total keseluruhan, bukan jumlah baris halaman aktif.
+            ->assertSee('16 customer', false);
 
         $this->get('/admin/customers?page=2')
             ->assertOk()
