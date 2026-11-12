@@ -12,6 +12,8 @@ use App\Services\EvaluasiHampers;
 use App\Support\Pengaturan;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 
 class BirthdayController extends Controller
@@ -21,8 +23,9 @@ class BirthdayController extends Controller
     /**
      * Kriteria evaluasi hampers. Nilainya disimpan di halaman Pengaturan Program.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $keyword = trim((string) $request->input('q'));
         $year = now()->year;
         $windowDays = Pengaturan::ambilInt('window_days', Pengaturan::DEFAULT_WINDOW_DAYS);
         $minVisits = Pengaturan::ambilInt('min_visits', Pengaturan::DEFAULT_MIN_VISITS);
@@ -85,6 +88,27 @@ class BirthdayController extends Controller
         }
 
         $eligibleCount = $members->filter(fn (Customer $customer) => $customer->hampers_eligible)->count();
+
+        // Pencarian nama/WhatsApp mempersempit daftar; statistik memakai seluruh member.
+        if ($keyword !== '') {
+            $needle = mb_strtolower($keyword, 'UTF-8');
+            $members = $members
+                ->filter(fn (Customer $customer) => str_contains(mb_strtolower($customer->nama, 'UTF-8'), $needle)
+                    || str_contains((string) $customer->no_wa, $needle))
+                ->values();
+        }
+
+        // Bagi halaman manual: daftar member sudah koleksi terproses (bukan query builder).
+        $totalMembers = $members->count();
+        $perPage = 15;
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $members = new LengthAwarePaginator(
+            $members->forPage($page, $perPage),
+            $totalMembers,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()],
+        );
 
         return view('birthday.ang-index', compact(
             'quotaYear',

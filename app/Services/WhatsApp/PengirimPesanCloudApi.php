@@ -5,6 +5,7 @@ namespace App\Services\WhatsApp;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Driver Meta WhatsApp Cloud API (graph.facebook.com).
@@ -42,10 +43,7 @@ class PengirimPesanCloudApi implements PengirimPesan
                     ],
                     'components' => [[
                         'type' => 'body',
-                        'parameters' => array_map(
-                            fn (string $nilai) => ['type' => 'text', 'text' => $nilai],
-                            array_values($params),
-                        ),
+                        'parameters' => $this->parameterBody($templateKunci, $params),
                     ]],
                 ],
             ];
@@ -64,6 +62,10 @@ class PengirimPesanCloudApi implements PengirimPesan
             )));
         }
 
+        $id = $respons->json('messages.0.id');
+        $statusKirim = $respons->json('messages.0.message_status');
+
+        Log::info('WA kirim', ['id' => $id, 'message_status' => $statusKirim, 'template' => $templateKunci]);
         return $id;
     }
 
@@ -73,6 +75,33 @@ class PengirimPesanCloudApi implements PengirimPesan
             'https://graph.facebook.com/%s/%s/messages',
             trim((string) config('whatsapp.api_version'), '/'),
             trim((string) $this->phoneNumberId(), '/'),
+        );
+    }
+
+    /**
+     * Susun parameter body template.
+     *
+     * Template yang di-approve memakai parameter bernama ({{nama}}, {{tanggal}}
+     * dengan parameter_format NAMED), sehingga tiap nilai dikirim lengkap
+     * dengan parameter_name sesuai config('whatsapp.parameter_names').
+     * Bila nama tidak dikonfigurasi, parameter jatuh ke format positional.
+     */
+    private function parameterBody(string $kunci, array $params): array
+    {
+        $nama = array_values((array) config("whatsapp.parameter_names.$kunci", []));
+
+        return array_map(
+            function (int $index, string $nilai) use ($nama) {
+                $parameter = ['type' => 'text', 'text' => $nilai];
+
+                if (filled($nama[$index] ?? null)) {
+                    $parameter['parameter_name'] = $nama[$index];
+                }
+
+                return $parameter;
+            },
+            array_keys(array_values($params)),
+            array_values($params),
         );
     }
 

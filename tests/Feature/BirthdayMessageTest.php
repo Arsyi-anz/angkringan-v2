@@ -29,7 +29,7 @@ class BirthdayMessageTest extends TestCase
 
         $this->admin = Admin::create([
             'nama' => 'Admin Uji',
-            'email' => 'admin@example.test',
+            'username' => 'admin',
             'password' => 'rahasia123',
         ]);
     }

@@ -28,7 +28,8 @@ return [
     |
     | Nama template yang sudah di-approve Meta beserta bahasanya. Kunci
     | ("biasa"/"hampers") dipetakan oleh driver cloud; teksnya meniru
-    | App\Support\TemplatePesanUlangTahun dengan placeholder {{1}}, {{2}}.
+    | App\Support\TemplatePesanUlangTahun dengan parameter bernama
+    | ({{nama}}, {{tanggal}} — parameter_format NAMED di Meta).
     |
     */
 
@@ -37,6 +38,17 @@ return [
     'templates' => [
         'biasa' => env('WHATSAPP_TEMPLATE_BIASA', 'birthday_biasa'),
         'hampers' => env('WHATSAPP_TEMPLATE_HAMPERS', 'birthday_hampers'),
+    ],
+
+    /*
+    | Nama parameter template per kunci, sesuai urutan nilai yang dikirim
+    | oleh SendBirthdayMessages. Dipakai driver cloud untuk field
+    | parameter_name; biarkan kosong untuk template positional {{1}}, {{2}}.
+    */
+
+    'parameter_names' => [
+        'biasa' => ['nama'],
+        'hampers' => ['nama', 'tanggal'],
     ],
 
 ];

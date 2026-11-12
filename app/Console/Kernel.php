@@ -12,9 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // Tiap pagi (waktu Indonesia) kirim pesan ulang tahun hari itu.
+        // Berjalan tiap menit sepanjang hari: begitu ada member berulang
+        // tahun hari itu yang memenuhi syarat, pesan langsung dikirim
+        // (tidak menunggu jadwal pagi). Aman karena record TERKIRIM
+        // di-skip oleh command, dan proses dicegah tumpang tindih.
         $schedule->command('birthday:send')
-            ->dailyAt('08:00')
+            ->everyMinute()
             ->timezone('Asia/Jakarta')
             ->withoutOverlapping();
     }

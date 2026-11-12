@@ -22,7 +22,7 @@ class BirthdayTest extends TestCase
     {
         return Admin::create([
             'nama' => 'Admin Uji',
-            'email' => 'admin@example.test',
+            'username' => 'admin',
             'password' => 'rahasia123',
         ]);
     }
@@ -242,8 +242,9 @@ class BirthdayTest extends TestCase
             ->get(route('admin.birthday.index'))
             ->assertOk()
             ->assertSee('<span class="ang-badge ang-badge-ok">Sudah KLAIM</span>', false)
-            // Dewi layak tapi belum ada record -> tombol KLAIM.
-            ->assertSee('>KLAIM</button>', false)
+            // Dewi layak tapi pesan belum terkirim -> "Menunggu Kirim", tanpa tombol KLAIM.
+            ->assertSee('<span class="ang-badge ang-badge-off">Menunggu Kirim</span>', false)
+            ->assertDontSee('>KLAIM</button>', false)
             ->assertViewHas('eligibleCount', 1)
             ->assertViewHas('members', fn ($members) => $members->firstWhere('nama', 'Citra')->hampers_eligible === false);
     }
@@ -300,8 +301,19 @@ class BirthdayTest extends TestCase
         $admin = $this->makeAdmin();
         $tahun = now()->year;
 
-        // Layak, belum ada record hampers -> tombol KLAIM (route ke customer).
+        // Pesan terkirim, record hampers BELUM_DIAMBIL -> tombol KLAIM.
         $siap = $this->birthdayCustomer('Tari', 5, $admin, '628566666666');
+        Hampers::create([
+            'id_customer' => $siap->id_customer,
+            'id_pesan' => $this->makePesan($siap),
+            'tahun_kuota' => $tahun,
+            'kode_klaim' => 'HAM-SIAP1',
+            'batas_ambil' => now()->addDays(5)->toDateString(),
+            'status' => 'BELUM_DIAMBIL',
+        ]);
+
+        // Layak tapi pesan belum terkirim (belum ada record) -> "Menunggu Kirim".
+        $menunggu = $this->birthdayCustomer('Dara', 5, $admin, '628511111111');
 
         // Lewat batas ambil, belum diklaim -> otomatis KEDALUWARSA + badge.
         $lewat = $this->birthdayCustomer('Galih', 5, $admin, '628577777777');
@@ -334,8 +346,10 @@ class BirthdayTest extends TestCase
             ->assertOk()
             ->assertSee('data-claim-action="'.route('admin.hampers.claim', $siap).'"', false)
             ->assertSee('>KLAIM</button>', false)
+            ->assertSee('<span class="ang-badge ang-badge-off">Menunggu Kirim</span>', false)
             ->assertSee('<span class="ang-badge ang-badge-no">Kadaluwarsa</span>', false)
-            ->assertSee('<span class="ang-badge ang-badge-ok">Sudah KLAIM</span>', false);
+            ->assertSee('<span class="ang-badge ang-badge-ok">Sudah KLAIM</span>', false)
+            ->assertViewHas('members', fn ($members) => $members->firstWhere('nama', 'Dara')->getAttribute('hampers_tahun') === null);
 
         $this->assertDatabaseHas('hampers', ['kode_klaim' => 'HAM-LEWAT1', 'status' => 'KEDALUWARSA']);
     }
@@ -391,5 +405,40 @@ class BirthdayTest extends TestCase
             session('status'),
         );
         $this->assertDatabaseCount('hampers', 0);
+    }
+
+    public function test_birthday_member_list_can_be_searched_and_paginated(): void
+    {
+        $admin = $this->makeAdmin();
+        $this->actingAs($admin, 'admin');
+
+        foreach (range(1, 16) as $i) {
+            $this->birthdayCustomer(
+                'Member B'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+                0,
+                $admin,
+                '6281'.str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+            );
+        }
+
+        // Halaman 1: 15 member pertama (urut tanggal lahir, lalu nama).
+        $this->get(route('admin.birthday.index'))
+            ->assertOk()
+            ->assertSee('16 member', false)
+            ->assertSee('Halaman 1 dari 2', false)
+            ->assertSee('<span class="ang-person-name">Member B01</span>', false)
+            ->assertDontSee('<span class="ang-person-name">Member B16</span>', false);
+
+        $this->get(route('admin.birthday.index', ['page' => 2]))
+            ->assertOk()
+            ->assertSee('<span class="ang-person-name">Member B16</span>', false)
+            ->assertDontSee('<span class="ang-person-name">Member B15</span>', false);
+
+        // Pencarian mempersempit daftar sebelum dibagi halaman.
+        $this->get(route('admin.birthday.index', ['q' => 'Member B07']))
+            ->assertOk()
+            ->assertSee('<span class="ang-person-name">Member B07</span>', false)
+            ->assertDontSee('<span class="ang-person-name">Member B08</span>', false)
+            ->assertSee('>1 member<', false);
     }
 }
